@@ -1,0 +1,19 @@
+{
+  "name": "HoverboardAPI",
+  "keywords": "Hoverboard, API, Interface, controller",
+  "description": "Interface to communicate with the Hoverboard",
+  "url": "http://playground.arduino.cc/Code/HoverboardAPI",
+  "include": "HoverboardAPI",
+  "authors": 
+  [
+    {
+      "name": "Beat & Philipp"
+    }
+  ],
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/xenotrax/HoverboardAPI.git"
+  },
+  "frameworks": "arduino"
+}

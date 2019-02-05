@@ -1,0 +1,25 @@
+#######################################
+# Syntax Coloring Map For HoverboardAPI Library
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+HoverboardAPI	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+#SetMode	KEYWORD2
+#Compute	KEYWORD2
+#...
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+#AUTOMATIC	LITERAL1
+#MANUAL	LITERAL1
+#DIRECT	LITERAL1
