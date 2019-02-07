@@ -13,10 +13,12 @@ class HoverboardAPI
  
   //commonly used functions **************************************************************************
     HoverboardAPI();                      // * constructor.  
+    void setHoverboardTraction( int16_t base_pwm, int16_t steer );   
 
   //available but not commonly used functions ********************************************************
  	
   private:
+  
 	
 };
 #endif
