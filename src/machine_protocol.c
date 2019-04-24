@@ -30,6 +30,7 @@
 #endif
 
 #include "config.h"
+#include "protocolFunctions.h"
 
 #ifdef DEACTIVATED
     #include "sensorcoms.h"
@@ -128,27 +129,6 @@ PROTOCOL_STAT s;
 #define PROTOCOL_TX_WAITING 1
 
 
-/////////////////////////////////////////////////////////////
-// specify where to send data out of with a function pointer.
-#ifdef SOFTWARE_SERIAL
-static int (*send_serial_data)( unsigned char *data, int len ) = softwareserial_Send;
-//static int (*send_serial_data_wait)( unsigned char *data, int len ) = softwareserial_Send_Wait;
-#endif
-
-// TODO: Method to select which output is used for Protocol when both are active
-#if defined(SERIAL_USART2_IT) && !defined(READ_SENSOR)
-extern int USART2_IT_send(unsigned char *data, int len);
-
-static int (*send_serial_data)( unsigned char *data, int len ) = USART2_IT_send;
-//static int (*send_serial_data_wait)( unsigned char *data, int len ) = USART2_IT_send;
-#elif defined(SERIAL_USART3_IT) && !defined(READ_SENSOR)
-extern int USART3_IT_send(unsigned char *data, int len);
-
-static int (*send_serial_data)( unsigned char *data, int len ) = USART3_IT_send;
-//static int (*send_serial_data_wait)( unsigned char *data, int len ) = USART3_IT_send;
-#endif
-
-
 
 // private to us
 static void protocol_send_nack(unsigned char CI);
@@ -175,7 +155,7 @@ void protocol_byte( unsigned char byte ){
         case PROTOCOL_STATE_IDLE:
             if (byte == PROTOCOL_SOM){
                 s.curr_msg.SOM = byte;
-                s.last_char_time = HAL_GetTick();
+                s.last_char_time = getTick();
                 s.state = PROTOCOL_STATE_WAIT_CI;
                 s.CS = 0;
             } else {
@@ -186,27 +166,27 @@ void protocol_byte( unsigned char byte ){
                     ascii_byte( byte );
                     //////////////////////////////////////////////////////
                 } else {
-                    s.last_char_time = HAL_GetTick();
+                    s.last_char_time = getTick();
                     s.state = PROTOCOL_STATE_BADCHAR;
                 }
             }
             break;
         case PROTOCOL_STATE_WAIT_CI:
-            s.last_char_time = HAL_GetTick();
+            s.last_char_time = getTick();
             s.curr_msg.CI = byte;
             s.CS += byte;
             s.state = PROTOCOL_STATE_WAIT_LEN;
             break;
 
         case PROTOCOL_STATE_WAIT_LEN:
-            s.last_char_time = HAL_GetTick();
+            s.last_char_time = getTick();
             s.curr_msg.len = byte;
             s.count = 0;
             s.CS += byte;
             s.state = PROTOCOL_STATE_WAIT_END;
             break;
         case PROTOCOL_STATE_WAIT_END:
-            s.last_char_time = HAL_GetTick();
+            s.last_char_time = getTick();
             s.curr_msg.bytes[s.count++] = byte;
             s.CS += byte;
 
@@ -244,7 +224,7 @@ void protocol_byte( unsigned char byte ){
                             // ignore CI
                             if (s.retries > 0){
                                 protocol_send_raw(&s.curr_send_msg);
-                                s.last_send_time = HAL_GetTick();
+                                s.last_send_time = getTick();
                                 s.retries--;
                             } else {
                                 s.send_state = PROTOCOL_TX_IDLE;
@@ -350,7 +330,7 @@ int protocol_send(PROTOCOL_LEN_ONWARDS *len_bytes){
     }
     protocol_send_raw(&s.curr_send_msg);
     s.send_state = PROTOCOL_TX_WAITING;
-    s.last_send_time = HAL_GetTick();
+    s.last_send_time = getTick();
     s.retries = 2;
     return 0;
 }
@@ -374,7 +354,7 @@ void protocol_send_raw(PROTOCOL_MSG2 *msg){
 // called regularly from main.c
 // externed from protocol.h
 void protocol_tick(){
-    s.last_tick_time = HAL_GetTick();
+    s.last_tick_time = getTick();
     switch(s.send_state){
         case PROTOCOL_TX_IDLE:{
                 int txcount = mpTxQueued();
@@ -389,7 +369,7 @@ void protocol_tick(){
                 // 'If an end does not receive an ACK response within (TIMEOUT1), it should resend the last message with the same CI, up to 2 retries'
                 if (s.retries > 0){
                     protocol_send_raw(&s.curr_send_msg);
-                    s.last_send_time = HAL_GetTick();
+                    s.last_send_time = getTick();
                     s.retries--;
                 } else {
                     s.send_state = PROTOCOL_TX_IDLE;

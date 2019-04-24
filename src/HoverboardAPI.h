@@ -10,16 +10,21 @@ class HoverboardAPI
 
   //Constants used in some of the functions below
   //#define xxy 1
- 
+
   //commonly used functions **************************************************************************
-    HoverboardAPI();                      // * constructor.  
-    void setHoverboardTraction( int16_t base_pwm, int16_t steer );   
+    HoverboardAPI(Stream *port);                      // * constructor.
+    void setHoverboardTraction( int16_t base_pwm, int16_t steer );
+    void sendSpeed(int16_t pwm, int16_t steer);
+    void requestHall();
+    void protocolPush(unsigned char byte);
+    void sendBuzzer(uint8_t buzzerFreq, uint8_t buzzerPattern, uint8_t buzzerLen);
+
 
   //available but not commonly used functions ********************************************************
- 	
+
   private:
-  
-	
+
+
 };
 #endif
 

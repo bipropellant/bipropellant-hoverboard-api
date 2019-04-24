@@ -19,7 +19,7 @@
 #pragma once
 
 #include "config.h"
-
+#include <stdint.h>
 
 
 /////////////////////////////////////////////////////////////////
@@ -211,5 +211,8 @@ typedef struct tag_POSN_INCR {
     long Right;
 } POSN_INCR;
 extern int enable_immediate;
+
+// call this to send messages
+extern int protocol_post(PROTOCOL_LEN_ONWARDS *len_bytes);
 
 #endif

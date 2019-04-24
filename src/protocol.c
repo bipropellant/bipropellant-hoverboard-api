@@ -23,6 +23,7 @@
 #endif
 
 #include "config.h"
+#include "protocolFunctions.h"
 
 #ifdef DEACTIVATED
     #include "sensorcoms.h"
@@ -153,39 +154,6 @@ extern int steer; // global variable for steering. -1000 to 1000
 extern int speed; // global variable for speed. -1000 to 1000
 ///////////////////////////////////////////////
 
-
-/////////////////////////////////////////////////////////////
-// specify where to send data out of with a function pointer.
-#ifdef SOFTWARE_SERIAL
-static int (*send_serial_data)( unsigned char *data, int len ) = softwareserial_Send;
-//static int (*send_serial_data_wait)( unsigned char *data, int len ) = softwareserial_Send_Wait;
-#endif
-
-// TODO: Method to select which output is used for Protocol when both are active
-#if defined(SERIAL_USART2_IT) && !defined(READ_SENSOR)
-extern int USART2_IT_send(unsigned char *data, int len);
-
-static int (*send_serial_data)( unsigned char *data, int len ) = USART2_IT_send;
-//static int (*send_serial_data_wait)( unsigned char *data, int len ) = USART2_IT_send;
-#elif defined(SERIAL_USART3_IT) && !defined(READ_SENSOR)
-extern int USART3_IT_send(unsigned char *data, int len);
-
-static int (*send_serial_data)( unsigned char *data, int len ) = USART3_IT_send;
-//static int (*send_serial_data_wait)( unsigned char *data, int len ) = USART3_IT_send;
-#endif
-
-#ifdef DEACTIVATED
-#ifdef DEBUG_SERIAL_USART3
-// need to implement a buffering function here.
-// current DMA method needs attention...
-static int nosend( unsigned char *data, int len ){ return 0; };
-static int (*send_serial_data)( unsigned char *data, int len ) = nosend;
-//static int (*send_serial_data_wait)( unsigned char *data, int len ) = nosend;
-#endif
-#endif
-/////////////////////////////////////////////////////////////
-
-extern int protocol_post(PROTOCOL_LEN_ONWARDS *len_bytes);
 
 
 //////////////////////////////////////////////
@@ -460,9 +428,7 @@ void protocol_process_message(PROTOCOL_LEN_ONWARDS *msg){
         }
 
         case PROTOCOL_CMD_REBOOT:
-            //protocol_send_ack(); // we no longer ack from here
-            HAL_Delay(500);
-            HAL_NVIC_SystemReset();
+            resetSystem();
             break;
 
         case PROTOCOL_CMD_TEST:
