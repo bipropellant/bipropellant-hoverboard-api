@@ -6,8 +6,6 @@ void ascii_byte( unsigned char byte ){}
 // Called to reset the system from protocol. Not needed here.
 void resetSystem() {}
 
-int nosend( unsigned char *data, int len ){ return 0; };
-int (*send_serial_data)( unsigned char *data, int len ) = nosend;
 
 uint32_t noTick(void) { return 0; };
 uint32_t (*getTick)(void) = noTick;
@@ -57,7 +55,6 @@ static int (*send_serial_data)( unsigned char *data, int len ) = USART3_IT_send;
 
 
 void resetSystem() {
-    //protocol_send_ack(); // we no longer ack from here
     HAL_Delay(500);
     HAL_NVIC_SystemReset();
 }

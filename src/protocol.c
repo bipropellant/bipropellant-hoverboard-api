@@ -352,9 +352,8 @@ int paramcount = sizeof(params)/sizeof(params[0]);
 /////////////////////////////////////////////
 // a complete machineprotocl message has been
 // received without error
-void protocol_process_message(PROTOCOL_LEN_ONWARDS *msg){
+void protocol_process_message(PROTOCOL_STAT *s, PROTOCOL_LEN_ONWARDS *msg){
     PROTOCOL_BYTES *bytes = (PROTOCOL_BYTES *)msg->bytes;
-    //send_serial_data((unsigned char *) "process\n", 8);
 
     switch (bytes->cmd){
         case PROTOCOL_CMD_READVAL:{
@@ -372,7 +371,7 @@ void protocol_process_message(PROTOCOL_LEN_ONWARDS *msg){
                     }
                     msg->len = 1+1+params[i].len;  // command + code + data len only
                     // send back with 'read' command plus data like write.
-                    protocol_post(msg);
+                    protocol_post(s, msg);
                     if (params[i].postread) params[i].postread();
                     break;
                 }
@@ -381,7 +380,7 @@ void protocol_process_message(PROTOCOL_LEN_ONWARDS *msg){
             if (i == sizeof(params)/sizeof(params[0])){
                 msg->len = 1+1; // cmd + code only
                 // send back with 'read' command plus data like write.
-                protocol_post(msg);
+                protocol_post(s, msg);
             }
             break;
         }
@@ -404,7 +403,7 @@ void protocol_process_message(PROTOCOL_LEN_ONWARDS *msg){
                     msg->len = 1+1+1; // cmd+code+'1' only
                     msg->bytes[2] = 1; // say we wrote it
                     // send back with 'write' command with no data.
-                    protocol_post(msg);
+                    protocol_post(s, msg);
                     if (params[i].postwrite) params[i].postwrite();
                     break;
                 }
@@ -414,7 +413,7 @@ void protocol_process_message(PROTOCOL_LEN_ONWARDS *msg){
                 msg->len = 1+1+1; // cmd +code +'0' only
                 msg->bytes[2] = 0; // say we did not write it
                 // send back with 'write' command plus data like write.
-                protocol_post(msg);
+                protocol_post(s, msg);
             }
             break;
         }
@@ -424,19 +423,18 @@ void protocol_process_message(PROTOCOL_LEN_ONWARDS *msg){
             break;
 
         case PROTOCOL_CMD_TEST:
-            send_serial_data((unsigned char *) "test\n", 5);
             // just send it back!
             msg->bytes[0] = PROTOCOL_CMD_TESTRESPONSE;
             // note: original 'bytes' sent back, so leave len as is
-            protocol_post(msg);
+            protocol_post(s, msg);
             // post second immediately to test buffering
-            protocol_post(msg);
+            protocol_post(s, msg);
             break;
 
         default:
             msg->bytes[0] = PROTOCOL_CMD_UNKNOWN;
             msg->len = 1;
-            protocol_post(msg);
+            protocol_post(s, msg);
             break;
     }
 }

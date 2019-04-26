@@ -2,6 +2,11 @@
 #define HoverboardAPI_h
 #define LIBRARY_VERSION	0.0.1
 
+
+extern "C" {
+  #include "protocol.h"
+}
+
 class HoverboardAPI
 {
 
@@ -12,8 +17,7 @@ class HoverboardAPI
   //#define xxy 1
 
   //commonly used functions **************************************************************************
-    HoverboardAPI(Stream *port);                      // * constructor.
-    void setHoverboardTraction( int16_t base_pwm, int16_t steer );
+    HoverboardAPI(int (*send_serial_data)( unsigned char *data, int len ));          // * constructor.
     void sendSpeed(int16_t pwm, int16_t steer);
     void requestHall();
     void protocolPush(unsigned char byte);
@@ -29,9 +33,10 @@ class HoverboardAPI
     double getSteer_kmh();
 
 
-  //available but not commonly used functions ********************************************************
+    //available but not commonly used functions ********************************************************
 
   private:
+    PROTOCOL_STAT s;
 
 
 };

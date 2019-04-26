@@ -15,25 +15,13 @@
 #include "HoverboardAPI.h"
 extern "C" {
   #include "protocol.h"
+  #include "protocolFunctions.h"
 }
 
-Stream *serialport = NULL;
 
-int serialWrapper(unsigned char *data, int len) {
-      return (int) serialport->write(data,len);
+inline uint32_t tickWrapper(void) {
+  return (uint32_t) millis();
 }
-
-//extern "C" int (*send_serial_data)( unsigned char *data, int len );
-//int (*send_serial_data)( unsigned char *data, int len ) = serialWrapper;
-extern "C" int (*send_serial_data)( unsigned char *data, int len );  // why do I need to do that? This is already done in protocol.h!?
-
-
-uint32_t tickWrapper(void) {
-  return (uint32_t) millis;
-}
-
-extern "C" uint32_t (*getTick)(void);
-
 
 
 
@@ -41,10 +29,10 @@ extern "C" uint32_t (*getTick)(void);
  *    The parameters specified here are those for for which we can't set up
  *    reliable defaults, so we need to have the user set them.
  ***************************************************************************/
-HoverboardAPI::HoverboardAPI(Stream *port)
+HoverboardAPI::HoverboardAPI(int (*send_serial_data)( unsigned char *data, int len ))
 {
-  serialport = port;
-  send_serial_data = serialWrapper;
+  protocol_init(&s);
+  s.send_serial_data = send_serial_data;
   getTick = tickWrapper;
 }
 
@@ -70,13 +58,15 @@ void HoverboardAPI::sendSpeed(int16_t pwm, int16_t steer) {
     writespeed->steer = steer;
 
     msg->len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(writespeed) + 1; // 1 for Checksum
-    protocol_post(msg);
+    protocol_post(&s, msg);
 }
 
 
 
 void HoverboardAPI::protocolPush(unsigned char byte) {
 
+  protocol_byte(&s, byte);
+}
 
 extern "C" PARAMSTAT params[];
 extern "C" int paramcount;
@@ -93,7 +83,7 @@ void HoverboardAPI::setPrewrite(unsigned char code, void (*callback)(void)) {
   for (int i = 0; i < paramcount; i++) {
     if (params[i].code == code) {
         params[i].prewrite = callback;
-}
+    }
   }
 }
 
@@ -127,7 +117,7 @@ void HoverboardAPI::requestHall() {
 
     msg->len = sizeof(readvals->cmd) + sizeof(readvals->code) + 1; // 1 for Checksum
 
-    protocol_post(msg);
+    protocol_post(&s, msg);
 
 }
 
@@ -152,6 +142,9 @@ void HoverboardAPI::sendBuzzer(uint8_t buzzerFreq, uint8_t buzzerPattern, uint8_
     writebuzzer->buzzerLen = buzzerLen;
 
     msg->len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(writebuzzer) + 1; // 1 for Checksum
+    protocol_post(&s, msg);
+}
+
 
 
 double HoverboardAPI::getSpeed_kmh() {

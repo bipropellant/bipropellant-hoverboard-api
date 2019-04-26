@@ -22,13 +22,6 @@
 #include <stdint.h>
 
 
-/////////////////////////////////////////////////////////////////
-// call this with received bytes; normally from main loop
-extern void protocol_byte( unsigned char byte );
-// call this regularly from main.c
-extern void protocol_tick();
-extern void protocol_init();
-/////////////////////////////////////////////////////////////////
 
 
 //// control structures used in firmware
@@ -149,6 +142,35 @@ typedef struct tag_PROTOCOL_BYTES_WRITEVALS {
     unsigned char code; // code of value to write
     unsigned char content[252]; // value to write
 } PROTOCOL_BYTES_WRITEVALS;
+
+
+typedef struct tag_PROTOCOL_STAT {
+    char allow_ascii;
+    unsigned long last_send_time;
+    unsigned long last_tick_time;
+
+    char state;
+    unsigned long last_char_time;
+    unsigned char CS;
+    unsigned char count;
+    unsigned int nonsync;
+    PROTOCOL_MSG2 curr_msg;
+    unsigned char lastRXCI;
+
+    unsigned int unwantedacks;
+    unsigned int unwantednacks;
+
+    char send_state;
+    PROTOCOL_MSG2 curr_send_msg;
+    char retries;
+
+    int timeout1;
+    int timeout2;
+
+    int (*send_serial_data)( unsigned char *data, int len );
+
+} PROTOCOL_STAT;
+
 #pragma pack(pop)
 
 
@@ -213,6 +235,17 @@ typedef struct tag_POSN_INCR {
 extern int enable_immediate;
 
 // call this to send messages
-extern int protocol_post(PROTOCOL_LEN_ONWARDS *len_bytes);
+extern int protocol_post(PROTOCOL_STAT *s, PROTOCOL_LEN_ONWARDS *len_bytes);
+
+
+
+/////////////////////////////////////////////////////////////////
+// call this with received bytes; normally from main loop
+extern void protocol_byte( PROTOCOL_STAT *s, unsigned char byte );
+// call this regularly from main.c
+extern void protocol_tick(PROTOCOL_STAT *s);
+extern void protocol_init(PROTOCOL_STAT *s);
+/////////////////////////////////////////////////////////////////
+
 
 #endif
