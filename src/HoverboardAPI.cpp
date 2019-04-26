@@ -121,5 +121,12 @@ void HoverboardAPI::sendBuzzer(uint8_t buzzerFreq, uint8_t buzzerPattern, uint8_
     writebuzzer->buzzerLen = buzzerLen;
 
     msg->len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(writebuzzer) + 1; // 1 for Checksum
-    protocol_post(msg);
+
+
+double HoverboardAPI::getSpeed_kmh() {
+  return   (HallData[0].HallSpeed_mm_per_s + HallData[1].HallSpeed_mm_per_s) / 2.0 * 3600.0 / 1000000.0;
+}
+
+double HoverboardAPI::getSteer_kmh() {
+  return   (HallData[0].HallSpeed_mm_per_s * 3600.0 / 1000000.0 )- getSpeed_kmh();
 }

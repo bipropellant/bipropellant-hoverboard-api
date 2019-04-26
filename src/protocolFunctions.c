@@ -26,6 +26,12 @@ int speed=0; // global variable for speed. -1000 to 1000
 uint8_t enable=0; // global variable for motor enable
 volatile uint32_t timeout=0; // global variable for timeout
 
+volatile HALL_DATA_STRUCT HallData[2];
+
+
+
+
+
 #ifdef HOVERBOARDFW
 
 /////////////////////////////////////////////////////////////

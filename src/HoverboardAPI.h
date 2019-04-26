@@ -20,6 +20,10 @@ class HoverboardAPI
     void sendBuzzer(uint8_t buzzerFreq, uint8_t buzzerPattern, uint8_t buzzerLen);
 
 
+    double getSpeed_kmh();
+    double getSteer_kmh();
+
+
   //available but not commonly used functions ********************************************************
 
   private:
