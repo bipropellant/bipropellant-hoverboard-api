@@ -16,6 +16,7 @@
 extern "C" {
   #include "protocol.h"
   #include "protocolFunctions.h"
+  #include "hallinterrupts.h"
 }
 
 

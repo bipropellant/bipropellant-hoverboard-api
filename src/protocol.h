@@ -180,6 +180,8 @@ typedef struct tag_PROTOCOL_STAT {
     int timeout2;
 
     int (*send_serial_data)( unsigned char *data, int len );
+    int (*send_serial_data_wait)( unsigned char *data, int len );
+
     MACHINE_PROTOCOL_TX_BUFFER TxBuffer;
 
 } PROTOCOL_STAT;
@@ -247,6 +249,10 @@ typedef struct tag_POSN_INCR {
 } POSN_INCR;
 extern int enable_immediate;
 
+extern PROTOCOL_STAT sUSART2;
+extern PROTOCOL_STAT sUSART3;
+extern PROTOCOL_STAT sSoftwerSerial;
+
 // call this to send messages
 extern int protocol_post(PROTOCOL_STAT *s, PROTOCOL_LEN_ONWARDS *len_bytes);
 
@@ -259,6 +265,7 @@ extern void protocol_byte( PROTOCOL_STAT *s, unsigned char byte );
 extern void protocol_tick(PROTOCOL_STAT *s);
 extern void protocol_init(PROTOCOL_STAT *s);
 /////////////////////////////////////////////////////////////////
+extern void ascii_byte(PROTOCOL_STAT *s, unsigned char byte );
 
 
 #endif

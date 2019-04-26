@@ -58,7 +58,6 @@
 #ifdef CONTROL_SERIAL_PROTOCOL
 
 // from protocol.c
-extern void ascii_byte( unsigned char byte );
 extern void protocol_process_message(PROTOCOL_LEN_ONWARDS *msg);
 
 
@@ -123,7 +122,7 @@ void protocol_byte(PROTOCOL_STAT *s, unsigned char byte ){
                     //////////////////////////////////////////////////////
                     // if the byte was NOT SOM (02), then treat it as an
                     // ascii protocol byte.  BOTH protocol can co-exist
-                    ascii_byte( byte );
+                    ascii_byte(s, byte );
                     //////////////////////////////////////////////////////
                 } else {
                     s->last_char_time = getTick();

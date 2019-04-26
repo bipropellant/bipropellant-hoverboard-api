@@ -1,7 +1,9 @@
 #include "protocolFunctions.h"
+#include "hallinterrupts.h"
+#include "protocol.h"
 
 // Originally used to parse ASCII characters. Not needed here.
-void ascii_byte( unsigned char byte ){}
+void ascii_byte(PROTOCOL_STAT *s, unsigned char byte ){}
 
 // Called to reset the system from protocol. Not needed here.
 void resetSystem() {}
@@ -25,43 +27,3 @@ uint8_t enable=0; // global variable for motor enable
 volatile uint32_t timeout=0; // global variable for timeout
 
 volatile HALL_DATA_STRUCT HallData[2];
-
-
-
-
-
-#ifdef HOVERBOARDFW
-
-/////////////////////////////////////////////////////////////
-// specify where to send data out of with a function pointer.
-#ifdef SOFTWARE_SERIAL
-static int (*send_serial_data)( unsigned char *data, int len ) = softwareserial_Send;
-//static int (*send_serial_data_wait)( unsigned char *data, int len ) = softwareserial_Send_Wait;
-#endif
-
-// TODO: Method to select which output is used for Protocol when both are active
-#if defined(SERIAL_USART2_IT) && !defined(READ_SENSOR)
-extern int USART2_IT_send(unsigned char *data, int len);
-
-static int (*send_serial_data)( unsigned char *data, int len ) = USART2_IT_send;
-//static int (*send_serial_data_wait)( unsigned char *data, int len ) = USART2_IT_send;
-#elif defined(SERIAL_USART3_IT) && !defined(READ_SENSOR)
-extern int USART3_IT_send(unsigned char *data, int len);
-
-static int (*send_serial_data)( unsigned char *data, int len ) = USART3_IT_send;
-//static int (*send_serial_data_wait)( unsigned char *data, int len ) = USART3_IT_send;
-#endif
-
-
-
-void resetSystem() {
-    HAL_Delay(500);
-    HAL_NVIC_SystemReset();
-}
-
-uint32_t getTick(void) {
-    return HAL_GetTick();
-}
-
-
-#endif
