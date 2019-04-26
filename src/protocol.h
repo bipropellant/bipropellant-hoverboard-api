@@ -144,6 +144,18 @@ typedef struct tag_PROTOCOL_BYTES_WRITEVALS {
 } PROTOCOL_BYTES_WRITEVALS;
 
 
+#define MACHINE_PROTOCOL_TX_BUFFER_SIZE 1024
+typedef struct tag_MACHINE_PROTOCOL_TX_BUFFER {
+    volatile unsigned char buff[MACHINE_PROTOCOL_TX_BUFFER_SIZE];
+    volatile int head;
+    volatile int tail;
+
+    // count of buffer overflows
+    volatile unsigned int overflow;
+
+} MACHINE_PROTOCOL_TX_BUFFER;
+
+
 typedef struct tag_PROTOCOL_STAT {
     char allow_ascii;
     unsigned long last_send_time;
@@ -168,6 +180,7 @@ typedef struct tag_PROTOCOL_STAT {
     int timeout2;
 
     int (*send_serial_data)( unsigned char *data, int len );
+    MACHINE_PROTOCOL_TX_BUFFER TxBuffer;
 
 } PROTOCOL_STAT;
 
