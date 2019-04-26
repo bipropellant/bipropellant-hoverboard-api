@@ -77,10 +77,41 @@ void HoverboardAPI::sendSpeed(int16_t pwm, int16_t steer) {
 
 void HoverboardAPI::protocolPush(unsigned char byte) {
 
-  protocol_byte(byte);
+
+extern "C" PARAMSTAT params[];
+extern "C" int paramcount;
+
+void HoverboardAPI::setPreread(unsigned char code, void (*callback)(void)) {
+  for (int i = 0; i < paramcount; i++) {
+    if (params[i].code == code) {
+        params[i].preread = callback;
+    }
+  }
 }
 
+void HoverboardAPI::setPrewrite(unsigned char code, void (*callback)(void)) {
+  for (int i = 0; i < paramcount; i++) {
+    if (params[i].code == code) {
+        params[i].prewrite = callback;
+}
+  }
+}
 
+void HoverboardAPI::setPostread(unsigned char code, void (*callback)(void)) {
+  for (int i = 0; i < paramcount; i++) {
+    if (params[i].code == code) {
+        params[i].postread = callback;
+    }
+  }
+}
+
+void HoverboardAPI::setPostwrite(unsigned char code, void (*callback)(void)) {
+  for (int i = 0; i < paramcount; i++) {
+    if (params[i].code == code) {
+        params[i].postwrite = callback;
+    }
+  }
+}
 
 void HoverboardAPI::requestHall() {
 

@@ -19,6 +19,11 @@ class HoverboardAPI
     void protocolPush(unsigned char byte);
     void sendBuzzer(uint8_t buzzerFreq, uint8_t buzzerPattern, uint8_t buzzerLen);
 
+    void setPreread(unsigned char code, void (*callback)(void));
+    void setPrewrite(unsigned char code, void (*callback)(void));
+    void setPostread(unsigned char code, void (*callback)(void));
+    void setPostwrite(unsigned char code, void (*callback)(void));
+
 
     double getSpeed_kmh();
     double getSteer_kmh();
