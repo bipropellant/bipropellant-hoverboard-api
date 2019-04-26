@@ -52,7 +52,7 @@ void HoverboardAPI::sendSpeed(int16_t pwm, int16_t steer) {
     PWM_STEER_CMD *writespeed = (PWM_STEER_CMD *) writevals->content;
 
     writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
-    writevals->code = 0x07; // speed data from params array
+    writevals->code = 0x20; // speed data from params array
 
     writespeed->base_pwm = pwm;
     writespeed->steer = steer;
@@ -135,7 +135,7 @@ void HoverboardAPI::sendBuzzer(uint8_t buzzerFreq, uint8_t buzzerPattern, uint8_
 
 
     writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
-    writevals->code = 0x08; // buzzer from params array
+    writevals->code = 0x21; // buzzer from params array
 
     writebuzzer->buzzerFreq = buzzerFreq;
     writebuzzer->buzzerPattern = buzzerPattern;
