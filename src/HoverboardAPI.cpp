@@ -75,6 +75,10 @@ void HoverboardAPI::protocolTick() {
 }
 
 
+int HoverboardAPI::getTxBufferLevel() {
+  return mpTxQueued(&s);
+}
+
 extern "C" PARAMSTAT params[];
 extern "C" int paramcount;
 

@@ -30,6 +30,8 @@ class HoverboardAPI
     void setPostread(unsigned char code, void (*callback)(void));
     void setPostwrite(unsigned char code, void (*callback)(void));
 
+    int getTxBufferLevel();
+
 
     double getSpeed_kmh();
     double getSteer_kmh();
