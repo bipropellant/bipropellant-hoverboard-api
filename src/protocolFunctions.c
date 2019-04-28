@@ -1,16 +1,18 @@
-#include "protocolFunctions.h"
 #include "hallinterrupts.h"
 #include "protocol.h"
-
-// Originally used to parse ASCII characters. Not needed here.
-void ascii_byte(PROTOCOL_STAT *s, unsigned char byte ){}
+#include "stm32f1xx_hal.h"
 
 // Called to reset the system from protocol. Not needed here.
 void resetSystem() {}
 
-
 uint32_t noTick(void) { return 0; };
-uint32_t (*getTick)(void) = noTick;
+uint32_t (*HAL_GetTick)(void) = noTick;
+
+void noDelay(uint32_t Delay) {};
+void (*HAL_Delay)(uint32_t Delay) = noDelay;
+
+void noReset(void) {};
+void (*HAL_NVIC_SystemReset)(void) = noReset;
 
 
 uint8_t debug_out=0;
@@ -27,3 +29,7 @@ uint8_t enable=0; // global variable for motor enable
 volatile uint32_t timeout=0; // global variable for timeout
 
 volatile HALL_DATA_STRUCT HallData[2];
+volatile HALL_PARAMS local_hall_params[2];
+
+int pwms[2] = {0, 0};
+int dspeeds[2] = {0,0};

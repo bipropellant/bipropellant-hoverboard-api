@@ -15,8 +15,9 @@
 #include "HoverboardAPI.h"
 extern "C" {
   #include "protocol.h"
-  #include "protocolFunctions.h"
   #include "hallinterrupts.h"
+  #include "stm32f1xx_hal.h"
+  extern int protocol_post(PROTOCOL_STAT *s, PROTOCOL_LEN_ONWARDS *len_bytes);
 }
 
 
@@ -34,7 +35,8 @@ HoverboardAPI::HoverboardAPI(int (*send_serial_data)( unsigned char *data, int l
 {
   protocol_init(&s);
   s.send_serial_data = send_serial_data;
-  getTick = tickWrapper;
+  HAL_GetTick = tickWrapper;
+  HAL_Delay = delay;
 }
 
 
@@ -65,9 +67,13 @@ void HoverboardAPI::sendSpeed(int16_t pwm, int16_t steer) {
 
 
 void HoverboardAPI::protocolPush(unsigned char byte) {
-
   protocol_byte(&s, byte);
 }
+
+void HoverboardAPI::protocolTick() {
+  protocol_tick(&s);
+}
+
 
 extern "C" PARAMSTAT params[];
 extern "C" int paramcount;
