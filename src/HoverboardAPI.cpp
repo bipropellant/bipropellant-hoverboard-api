@@ -44,7 +44,7 @@ HoverboardAPI::HoverboardAPI(int (*send_serial_data)( unsigned char *data, int l
 
 
 
-void HoverboardAPI::sendSpeed(int16_t pwm, int16_t steer) {
+void HoverboardAPI::sendPWM(int16_t pwm, int16_t steer) {
 
     PROTOCOL_LEN_ONWARDS newMsg;
     memset((void*)&newMsg,0x00,sizeof(PROTOCOL_LEN_ONWARDS));
@@ -52,13 +52,13 @@ void HoverboardAPI::sendSpeed(int16_t pwm, int16_t steer) {
 
     /* Send pwm and steer via protocol */
     PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) msg->bytes;
-    PWM_STEER_CMD *writespeed = (PWM_STEER_CMD *) writevals->content;
+    PWM_DATA *writespeed = (PWM_DATA *) writevals->content;
 
     writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
-    writevals->code = 0x20; // speed data from params array
+    writevals->code = 0x0E; // speed data from params array
 
-    writespeed->base_pwm = pwm;
-    writespeed->steer = steer;
+    writespeed->pwm[0] = pwm + steer;
+    writespeed->pwm[1] = pwm - steer;
 
     msg->len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(writespeed) + 1; // 1 for Checksum
     protocol_post(&s, msg);
@@ -142,7 +142,7 @@ void HoverboardAPI::sendBuzzer(uint8_t buzzerFreq, uint8_t buzzerPattern, uint8_
 
 
     PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) msg->bytes;
-    BUZZER *writebuzzer = (BUZZER *) writevals->content;
+    BUZZER_DATA *writebuzzer = (BUZZER_DATA *) writevals->content;
 
 
     writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
