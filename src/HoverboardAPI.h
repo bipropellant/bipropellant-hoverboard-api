@@ -19,16 +19,18 @@ class HoverboardAPI
   //commonly used functions **************************************************************************
     HoverboardAPI(int (*send_serial_data)( unsigned char *data, int len ));          // * constructor.
     void sendPWM(int16_t pwm, int16_t steer);
+    void sendPWMData(int16_t pwm, int16_t steer);
     void requestHall();
     void protocolPush(unsigned char byte);
     void protocolTick();
 
-    void sendBuzzer(uint8_t buzzerFreq, uint8_t buzzerPattern, uint8_t buzzerLen);
+    void sendBuzzer(uint8_t buzzerFreq, uint8_t buzzerPattern, uint16_t buzzerLen);
 
     void setPreread(unsigned char code, void (*callback)(void));
     void setPrewrite(unsigned char code, void (*callback)(void));
     void setPostread(unsigned char code, void (*callback)(void));
     void setPostwrite(unsigned char code, void (*callback)(void));
+    void setReceivedread(unsigned char code, void (*callback)(void));
 
     int getTxBufferLevel();
 

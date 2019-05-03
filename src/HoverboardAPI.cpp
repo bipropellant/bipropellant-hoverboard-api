@@ -25,6 +25,10 @@ inline uint32_t tickWrapper(void) {
   return (uint32_t) millis();
 }
 
+void printWrapper(const char str[]) {
+  Serial.print(str);
+}
+
 
 
 /*Constructor (...)*********************************************************
@@ -35,8 +39,12 @@ HoverboardAPI::HoverboardAPI(int (*send_serial_data)( unsigned char *data, int l
 {
   protocol_init(&s);
   s.send_serial_data = send_serial_data;
+  s.allow_ascii = 0;       // do not allow ASCII parsing.
   HAL_GetTick = tickWrapper;
   HAL_Delay = delay;
+  debugprint = printWrapper;
+  setPreread(0x21, NULL);   // Disable callbacks for Hall
+  setPostwrite(0x21, NULL); // Disable callbacks for Hall
 }
 
 
@@ -60,11 +68,32 @@ void HoverboardAPI::sendPWM(int16_t pwm, int16_t steer) {
     writespeed->pwm[0] = pwm + steer;
     writespeed->pwm[1] = pwm - steer;
 
-    msg->len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(writespeed) + 1; // 1 for Checksum
+    msg->len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(writespeed->pwm) + 1; // 1 for Checksum
     protocol_post(&s, msg);
 }
 
+void HoverboardAPI::sendPWMData(int16_t pwm, int16_t steer) {
 
+    PROTOCOL_LEN_ONWARDS newMsg;
+    memset((void*)&newMsg,0x00,sizeof(PROTOCOL_LEN_ONWARDS));
+    PROTOCOL_LEN_ONWARDS *msg = &newMsg;
+
+    /* Send pwm and steer via protocol */
+    PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) msg->bytes;
+    PWM_DATA *writespeed = (PWM_DATA *) writevals->content;
+
+    writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
+    writevals->code = 0x0D; // speed data from params array
+
+    writespeed->pwm[0] = pwm + steer;
+    writespeed->pwm[1] = pwm - steer;
+    writespeed->speed_max_power = 600;
+    writespeed->speed_min_power = -600;
+    writespeed->speed_minimum_pwm = 10;
+
+    msg->len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(writespeed) + 1; // 1 for Checksum
+    protocol_post(&s, msg);
+}
 
 void HoverboardAPI::protocolPush(unsigned char byte) {
   protocol_byte(&s, byte);
@@ -114,6 +143,14 @@ void HoverboardAPI::setPostwrite(unsigned char code, void (*callback)(void)) {
   }
 }
 
+void HoverboardAPI::setReceivedread(unsigned char code, void (*callback)(void)) {
+  for (int i = 0; i < paramcount; i++) {
+    if (params[i].code == code) {
+        params[i].receivedread = callback;
+    }
+  }
+}
+
 void HoverboardAPI::requestHall() {
 
     PROTOCOL_LEN_ONWARDS newMsg;
@@ -134,7 +171,7 @@ void HoverboardAPI::requestHall() {
 
 
 
-void HoverboardAPI::sendBuzzer(uint8_t buzzerFreq, uint8_t buzzerPattern, uint8_t buzzerLen) {
+void HoverboardAPI::sendBuzzer(uint8_t buzzerFreq, uint8_t buzzerPattern, uint16_t buzzerLen) {
 
     PROTOCOL_LEN_ONWARDS newMsg;
     memset((void*)&newMsg,0x00,sizeof(PROTOCOL_LEN_ONWARDS));
