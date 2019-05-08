@@ -23,14 +23,16 @@ class HoverboardAPI
     void requestHall();
     void protocolPush(unsigned char byte);
     void protocolTick();
-
+    void schedulePWM();
+    void scheduleScheduling();
+    void requestScheduleHall();
     void sendBuzzer(uint8_t buzzerFreq, uint8_t buzzerPattern, uint16_t buzzerLen);
 
-    void setPreread(unsigned char code, void (*callback)(void));
-    void setPrewrite(unsigned char code, void (*callback)(void));
-    void setPostread(unsigned char code, void (*callback)(void));
-    void setPostwrite(unsigned char code, void (*callback)(void));
-    void setReceivedread(unsigned char code, void (*callback)(void));
+    void setPreread(unsigned char code, void (*callback)(PROTOCOL_STAT *s));
+    void setPrewrite(unsigned char code, void (*callback)(PROTOCOL_STAT *s));
+    void setPostread(unsigned char code, void (*callback)(PROTOCOL_STAT *s));
+    void setPostwrite(unsigned char code, void (*callback)(PROTOCOL_STAT *s));
+    void setReceivedread(unsigned char code, void (*callback)(PROTOCOL_STAT *s));
 
     int getTxBufferLevel();
 
