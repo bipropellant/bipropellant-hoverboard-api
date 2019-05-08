@@ -28,11 +28,7 @@ class HoverboardAPI
     void requestScheduleHall();
     void sendBuzzer(uint8_t buzzerFreq, uint8_t buzzerPattern, uint16_t buzzerLen);
 
-    void setPreread(unsigned char code, void (*callback)(PROTOCOL_STAT *s));
-    void setPrewrite(unsigned char code, void (*callback)(PROTOCOL_STAT *s));
-    void setPostread(unsigned char code, void (*callback)(PROTOCOL_STAT *s));
-    void setPostwrite(unsigned char code, void (*callback)(PROTOCOL_STAT *s));
-    void setReceivedread(unsigned char code, void (*callback)(PROTOCOL_STAT *s));
+    PARAMSTAT_FN setParamHandler(unsigned char code, PARAMSTAT_FN callback);
 
     int getTxBufferLevel();
 

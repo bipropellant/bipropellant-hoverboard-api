@@ -44,9 +44,8 @@ HoverboardAPI::HoverboardAPI(int (*send_serial_data)( unsigned char *data, int l
   s.timeout2 = 10; // timeout between characters
   HAL_GetTick = tickWrapper;
   HAL_Delay = delay;
-  debugprint = printWrapper;
-  setPreread(0x21, NULL);   // Disable callbacks for Hall
-  setPostwrite(0x21, NULL); // Disable callbacks for Hall
+  consoleLog = printWrapper;
+  setParamHandler(0x21, NULL); // Disable callbacks for Hall
 }
 
 
@@ -115,45 +114,18 @@ int HoverboardAPI::getTxBufferLevel() {
 extern "C" PARAMSTAT params[];
 extern "C" int paramcount;
 
-void HoverboardAPI::setPreread(unsigned char code, void (*callback)(PROTOCOL_STAT *s)) {
+PARAMSTAT_FN HoverboardAPI::setParamHandler(unsigned char code, PARAMSTAT_FN callback) {
+  PARAMSTAT_FN old = NULL;
+
   for (int i = 0; i < paramcount; i++) {
     if (params[i].code == code) {
-        params[i].preread = callback;
+        old = params[i].fn;
+        params[i].fn = callback;
     }
   }
+  return old;
 }
 
-void HoverboardAPI::setPrewrite(unsigned char code, void (*callback)(PROTOCOL_STAT *s)) {
-  for (int i = 0; i < paramcount; i++) {
-    if (params[i].code == code) {
-        params[i].prewrite = callback;
-    }
-  }
-}
-
-void HoverboardAPI::setPostread(unsigned char code, void (*callback)(PROTOCOL_STAT *s)) {
-  for (int i = 0; i < paramcount; i++) {
-    if (params[i].code == code) {
-        params[i].postread = callback;
-    }
-  }
-}
-
-void HoverboardAPI::setPostwrite(unsigned char code, void (*callback)(PROTOCOL_STAT *s)) {
-  for (int i = 0; i < paramcount; i++) {
-    if (params[i].code == code) {
-        params[i].postwrite = callback;
-    }
-  }
-}
-
-void HoverboardAPI::setReceivedread(unsigned char code, void (*callback)(PROTOCOL_STAT *s)) {
-  for (int i = 0; i < paramcount; i++) {
-    if (params[i].code == code) {
-        params[i].receivedread = callback;
-    }
-  }
-}
 
 void HoverboardAPI::requestHall() {
 
@@ -173,7 +145,6 @@ void HoverboardAPI::requestHall() {
 }
 
 extern "C" {
-  void PostWrite_setSubscription(PROTOCOL_STAT *s);
   extern SUBSCRIBEDATA SubscribeData;
 }
 
@@ -183,7 +154,12 @@ void HoverboardAPI::schedulePWM() {
   SubscribeData.period = 30;               // all 30 ms
   SubscribeData.som = PROTOCOL_SOM_NOACK;
 
-  PostWrite_setSubscription(&s);
+  // PostWrite_setSubscription(&s);
+  for (int i = 0; i < paramcount; i++) {
+    if (params[i].code == SubscribeData.code) {
+      if (params[i].fn) params[i].fn( &s, &params[i], FN_TYPE_POST_WRITE );
+    }
+  }
 }
 
 void HoverboardAPI::scheduleScheduling() {

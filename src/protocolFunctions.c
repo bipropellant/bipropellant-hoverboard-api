@@ -14,6 +14,11 @@ void (*HAL_Delay)(uint32_t Delay) = noDelay;
 void noReset(void) {};
 void (*HAL_NVIC_SystemReset)(void) = noReset;
 
+//////////////////////////////////////////////
+// Function pointer which can be set for "debugging"
+void noprint(const char str[]) {};
+void (*consoleLog)(const char str[]) = noprint;
+
 
 uint8_t debug_out=0;
 uint8_t disablepoweroff=0;
