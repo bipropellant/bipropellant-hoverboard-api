@@ -26,6 +26,8 @@ class HoverboardAPI
     void schedulePWM();
     void scheduleScheduling();
     void requestScheduleHall();
+    void requestCounters();
+    void printStats(Stream &Port);
     void sendBuzzer(uint8_t buzzerFreq, uint8_t buzzerPattern, uint16_t buzzerLen);
 
     PARAMSTAT_FN setParamHandler(unsigned char code, PARAMSTAT_FN callback);

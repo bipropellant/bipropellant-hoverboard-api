@@ -108,7 +108,7 @@ void HoverboardAPI::protocolTick() {
 
 
 int HoverboardAPI::getTxBufferLevel() {
-  return mpTxQueued(&s.TxBufferACK);
+  return (mpTxQueued(&s.ack.TxBuffer) + mpTxQueued(&s.noack.TxBuffer));
 }
 
 extern "C" PARAMSTAT params[];
@@ -124,6 +124,41 @@ PARAMSTAT_FN HoverboardAPI::setParamHandler(unsigned char code, PARAMSTAT_FN cal
     }
   }
   return old;
+}
+
+
+void HoverboardAPI::printStats(Stream &port) {
+  char buffer [100];
+  int len;
+  extern PROTOCOLCOUNT ProtocolcountData;
+
+
+  len = snprintf ( buffer, 100, "ACK RX: %4li TX: %4li RXmissing: %4li TXretries: %4i    ", s.ack.counters.rx, s.ack.counters.tx, s.ack.counters.rxMissing, s.ack.counters.txRetries);
+  port.print(buffer);
+  len = snprintf ( buffer, 100, "NOACK RX: %4li TX: %4li RXmissing: %4li TXretries: %4i    ", s.noack.counters.rx, s.noack.counters.tx, s.noack.counters.rxMissing, s.noack.counters.txRetries);
+  port.print(buffer);
+  len = snprintf ( buffer, 100, "Received RX: %4li TX: %4li RXmissing: %4li TXretries: %4i    ",  ProtocolcountData.rx, ProtocolcountData.tx, ProtocolcountData.rxMissing, ProtocolcountData.txRetries);
+  port.print(buffer);
+
+  port.println();
+}
+
+
+void HoverboardAPI::requestCounters() {
+
+    PROTOCOL_MSG2 msg;
+    memset((void*)&msg,0x00,sizeof(PROTOCOL_MSG2));
+
+    /* Request Counters data via protocol */
+    PROTOCOL_BYTES_READVALS *readvals = (PROTOCOL_BYTES_READVALS *) &(msg.bytes);
+
+    readvals->cmd  = PROTOCOL_CMD_READVAL;  // Read value
+    readvals->code = 0x23; // fn_ProtocolcountDataSum
+
+    msg.SOM = PROTOCOL_SOM_ACK;
+    msg.len = sizeof(readvals->cmd) + sizeof(readvals->code) + 1; // 1 for Checksum
+
+    protocol_post(&s, &msg);
 }
 
 
