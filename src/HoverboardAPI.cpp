@@ -64,13 +64,13 @@ void HoverboardAPI::sendPWM(int16_t pwm, int16_t steer) {
     PWM_DATA *writespeed = (PWM_DATA *) writevals->content;
 
     writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
-    writevals->code = 0x0E; // speed data from params array
+    writevals->code = 0x0E; // pwm data (only PWM) from params array
 
     writespeed->pwm[0] = pwm + steer;
     writespeed->pwm[1] = pwm - steer;
     msg->SOM = PROTOCOL_SOM_NOACK;
 
-    msg->len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(writespeed->pwm) + 1; // 1 for Checksum
+    msg->len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(writespeed->pwm);
     protocol_post(&s, msg);
 }
 
@@ -85,7 +85,7 @@ void HoverboardAPI::sendPWMData(int16_t pwm, int16_t steer) {
     PWM_DATA *writespeed = (PWM_DATA *) writevals->content;
 
     writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
-    writevals->code = 0x0D; // speed data from params array
+    writevals->code = 0x0D; // pwm data from params array
 
     writespeed->pwm[0] = pwm - steer;
     writespeed->pwm[1] = pwm + steer;
@@ -94,7 +94,7 @@ void HoverboardAPI::sendPWMData(int16_t pwm, int16_t steer) {
     writespeed->speed_minimum_pwm = 10;
     msg->SOM = PROTOCOL_SOM_NOACK;
 
-    msg->len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(writespeed) + 1; // 1 for Checksum
+    msg->len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(writespeed);
     protocol_post(&s, msg);
 }
 
@@ -174,7 +174,7 @@ void HoverboardAPI::requestHall() {
     readvals->code = 0x02; // hall data from params array
 
     msg.SOM = PROTOCOL_SOM_NOACK;
-    msg.len = sizeof(readvals->cmd) + sizeof(readvals->code) + 1; // 1 for Checksum
+    msg.len = sizeof(readvals->cmd) + sizeof(readvals->code);
 
     protocol_post(&s, &msg);
 }
@@ -191,7 +191,7 @@ void HoverboardAPI::schedulePWM() {
 
   // PostWrite_setSubscription(&s);
   for (int i = 0; i < paramcount; i++) {
-    if (params[i].code == SubscribeData.code) {
+    if (params[i].code == 0x22) {        // 0x22 for subscriptions
       if (params[i].fn) params[i].fn( &s, &params[i], FN_TYPE_POST_WRITE );
     }
   }
@@ -252,7 +252,7 @@ void HoverboardAPI::requestScheduleHall() {
   writesubscribe->som = PROTOCOL_SOM_NOACK;
 
   msg.SOM = PROTOCOL_SOM_ACK;
-  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(writesubscribe) + 1; // 1 for Checksum
+  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(writesubscribe);
 
   protocol_post(&s, &msg);
 }
@@ -278,7 +278,7 @@ void HoverboardAPI::sendBuzzer(uint8_t buzzerFreq, uint8_t buzzerPattern, uint16
     writebuzzer->buzzerLen = buzzerLen;
     msg->SOM = PROTOCOL_SOM_NOACK;
 
-    msg->len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(writebuzzer) + 1; // 1 for Checksum
+    msg->len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(writebuzzer);
     protocol_post(&s, msg);
 }
 
