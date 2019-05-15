@@ -1,6 +1,7 @@
 #include "hallinterrupts.h"
 #include "protocol.h"
 #include "stm32f1xx_hal.h"
+#include "bldc.h"
 
 // Called to reset the system from protocol. Not needed here.
 void resetSystem() {}
@@ -38,3 +39,5 @@ volatile HALL_PARAMS local_hall_params[2];
 
 int pwms[2] = {0, 0};
 int dspeeds[2] = {0,0};
+
+volatile ELECTRICAL_PARAMS electrical_measurements;
