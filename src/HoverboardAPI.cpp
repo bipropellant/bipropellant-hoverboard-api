@@ -41,8 +41,8 @@ HoverboardAPI::HoverboardAPI(int (*send_serial_data)( unsigned char *data, int l
   s.send_serial_data = send_serial_data;
   s.send_serial_data_wait = send_serial_data;
   s.allow_ascii = 0;       // do not allow ASCII parsing.
-  s.timeout1 = 50; //timeout for ACK
-  s.timeout2 = 10; // timeout between characters
+//  s.timeout1 = 50; //timeout for ACK
+//  s.timeout2 = 10; // timeout between characters
   HAL_GetTick = tickWrapper;
   HAL_Delay = delay;
   consoleLog = printWrapper;
@@ -156,6 +156,8 @@ extern "C" {
 }
 
 void HoverboardAPI::scheduleTransmission(hoverboardCodes code, int count, unsigned int period) {
+  SUBSCRIBEDATA subscribeTemp = SubscribeData;
+
   SubscribeData.code = code;
   SubscribeData.count = count;
   SubscribeData.period = period;
@@ -166,6 +168,8 @@ void HoverboardAPI::scheduleTransmission(hoverboardCodes code, int count, unsign
       fn_SubscribeData( &s, &params[i], FN_TYPE_POST_WRITE );
     }
   }
+  SubscribeData = subscribeTemp;
+
 }
 
 /***************************************************************************
@@ -216,7 +220,15 @@ void HoverboardAPI::scheduleRead(hoverboardCodes code, int count, unsigned int p
   writesubscribe->period = period;
   writesubscribe->som = PROTOCOL_SOM_NOACK;     // Readouts without ACK
 
-  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(writesubscribe);
+  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(*writesubscribe);
+
+/*
+  unsigned char* charPtr=(unsigned char*)writesubscribe;
+  int i;
+  printf("\n\rstructure size ESP: %zu bytes  ",sizeof(SUBSCRIBEDATA));
+  for(i=0;i<sizeof(SUBSCRIBEDATA);i++)
+      printf("%02x ",charPtr[i]);
+*/
 
   protocol_post(&s, &msg);
 }
