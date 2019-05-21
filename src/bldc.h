@@ -1,6 +1,8 @@
-#ifndef BLDC_H
-#define BLDC_H
+#pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 // structure to hold all the things we read.
@@ -28,4 +30,7 @@ typedef struct tag_ELECTRICAL_PARAMS{
 } ELECTRICAL_PARAMS;
 
 extern volatile ELECTRICAL_PARAMS electrical_measurements;
+
+#ifdef __cplusplus
+}
 #endif

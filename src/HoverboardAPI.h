@@ -3,9 +3,7 @@
 #define LIBRARY_VERSION	0.0.1
 
 
-extern "C" {
-  #include "protocol.h"
-}
+#include "protocol.h"
 
 enum hoverboardCodes {
   protocolVersion          = 0x00,

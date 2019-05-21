@@ -2,6 +2,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //////////////////////////////////////////////////////////////
 // this is the Hall data we gather, and can be read elsewhere
 // one for each wheel
@@ -46,3 +50,7 @@ typedef struct tag_HALL_PARAMS{
 } HALL_PARAMS;
 
 extern volatile HALL_PARAMS local_hall_params[2];
+
+#ifdef __cplusplus
+}
+#endif

@@ -13,12 +13,11 @@
 #endif
 
 #include "HoverboardAPI.h"
-extern "C" {
-  #include "protocol.h"
-  #include "hallinterrupts.h"
-  #include "stm32f1xx_hal.h"
-  #include "bldc.h"
-}
+
+#include "protocol.h"
+#include "hallinterrupts.h"
+#include "stm32f1xx_hal.h"
+#include "bldc.h"
 
 
 
@@ -37,7 +36,7 @@ inline uint32_t tickWrapper(void) { return (uint32_t) millis(); }
 void printWrapper(const char str[]) {  Serial.print(str); }
 
 HoverboardAPI::HoverboardAPI(int (*send_serial_data)( unsigned char *data, int len )) {
-  protocol_init(&s);
+  if(protocol_init(&s) != 0) while(1) {};
   s.send_serial_data = send_serial_data;
   s.send_serial_data_wait = send_serial_data;
   s.allow_ascii = 0;       // do not allow ASCII parsing.
@@ -94,15 +93,14 @@ PARAMSTAT_FN HoverboardAPI::setParamHandler(hoverboardCodes code, PARAMSTAT_FN c
  ***************************************************************************/
 void HoverboardAPI::printStats(Stream &port) {
   char buffer [100];
-  int len;
   extern PROTOCOLCOUNT ProtocolcountData;
 
 
-  len = snprintf ( buffer, 100, "ACK RX: %4li TX: %4li RXmissing: %4li TXretries: %4i    ", s.ack.counters.rx, s.ack.counters.tx, s.ack.counters.rxMissing, s.ack.counters.txRetries);
+  snprintf ( buffer, 100, "ACK RX: %4li TX: %4li RXmissing: %4li TXretries: %4i    ", s.ack.counters.rx, s.ack.counters.tx, s.ack.counters.rxMissing, s.ack.counters.txRetries);
   port.print(buffer);
-  len = snprintf ( buffer, 100, "NOACK RX: %4li TX: %4li RXmissing: %4li TXretries: %4i    ", s.noack.counters.rx, s.noack.counters.tx, s.noack.counters.rxMissing, s.noack.counters.txRetries);
+  snprintf ( buffer, 100, "NOACK RX: %4li TX: %4li RXmissing: %4li TXretries: %4i    ", s.noack.counters.rx, s.noack.counters.tx, s.noack.counters.rxMissing, s.noack.counters.txRetries);
   port.print(buffer);
-  len = snprintf ( buffer, 100, "Received RX: %4li TX: %4li RXmissing: %4li TXretries: %4i    ",  ProtocolcountData.rx, ProtocolcountData.tx, ProtocolcountData.rxMissing, ProtocolcountData.txRetries);
+  snprintf ( buffer, 100, "Received RX: %4li TX: %4li RXmissing: %4li TXretries: %4i    ",  ProtocolcountData.rx, ProtocolcountData.tx, ProtocolcountData.rxMissing, ProtocolcountData.txRetries);
   port.print(buffer);
 
   port.println();
