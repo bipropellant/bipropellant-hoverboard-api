@@ -14,7 +14,7 @@ extern "C" {
 // hbprotocol module has different way to name
 #define INCLUDE_PROTOCOL2 2
 
-#ifdef OUTPUT_PROTOCOL
+#if defined(OUTPUT_PROTOCOL_UART) || defined(OUTPUT_PROTOCOL_ESPNOW)
   #define INCLUDE_PROTOCOL 2
   #define HALL_INTERRUPTS
 #endif
