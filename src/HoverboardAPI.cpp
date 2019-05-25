@@ -45,7 +45,7 @@ HoverboardAPI::HoverboardAPI(int (*send_serial_data)( unsigned char *data, int l
   HAL_GetTick = tickWrapper;
   HAL_Delay = delay;
   consoleLog = printWrapper;
-  setParamHandler(hoverboardCodes::sensHall, NULL); // Disable callbacks for Hall
+  setParamHandler(Codes::sensHall, NULL); // Disable callbacks for Hall
 }
 
 
@@ -76,7 +76,7 @@ int HoverboardAPI::getTxBufferLevel() {
 extern "C" PARAMSTAT params[];
 extern "C" int paramcount;
 
-PARAMSTAT_FN HoverboardAPI::setParamHandler(hoverboardCodes code, PARAMSTAT_FN callback) {
+PARAMSTAT_FN HoverboardAPI::setParamHandler(Codes code, PARAMSTAT_FN callback) {
   PARAMSTAT_FN old = NULL;
 
   for (int i = 0; i < paramcount; i++) {
@@ -112,11 +112,11 @@ void HoverboardAPI::printStats(Stream &port) {
  *    It is necessary to set a callback if something should happen when the
  *    data arrives. Otherwise the data can just be read from the variable.
  ***************************************************************************/
-void HoverboardAPI::requestRead(hoverboardCodes code) {
+void HoverboardAPI::requestRead(Codes code, char som) {
 
     // Compose new Message, no ACK needed.
     PROTOCOL_MSG2 msg = {
-      .SOM = PROTOCOL_SOM_NOACK,
+      .SOM = som,
     };
 
     // Message structure is for reading values.
@@ -153,16 +153,16 @@ extern "C" {
   extern void fn_SubscribeData ( PROTOCOL_STAT *s, PARAMSTAT *param, uint8_t fn_type );
 }
 
-void HoverboardAPI::scheduleTransmission(hoverboardCodes code, int count, unsigned int period) {
+void HoverboardAPI::scheduleTransmission(Codes code, int count, unsigned int period, char som) {
   SUBSCRIBEDATA subscribeTemp = SubscribeData;
 
   SubscribeData.code = code;
   SubscribeData.count = count;
   SubscribeData.period = period;
-  SubscribeData.som = PROTOCOL_SOM_NOACK;
+  SubscribeData.som = som;
 
   for (int i = 0; i < paramcount; i++) {
-    if (params[i].code == hoverboardCodes::protocolSubscriptions) {
+    if (params[i].code == Codes::protocolSubscriptions) {
       fn_SubscribeData( &s, &params[i], FN_TYPE_POST_WRITE );
     }
   }
@@ -171,31 +171,11 @@ void HoverboardAPI::scheduleTransmission(hoverboardCodes code, int count, unsign
 }
 
 /***************************************************************************
- * Create local schedule to request periodictransmission of messages.
- * can be used to reinit Message scheduling.
- * Otherwise when messages are scheduled and the other device reboots, the
- * schedule is lost.
- * Can only be done for one code, Subscribe Data is global and for each
- * local subscription there is only one slot.
- ***************************************************************************/
-void HoverboardAPI::scheduleScheduling(hoverboardCodes remoteCode, int remoteCount, unsigned int remotePeriod, unsigned int localPeriod, int localCount) {
-  // remote subscription
-  SubscribeData.code = remoteCode;
-  SubscribeData.count = remoteCount;
-  SubscribeData.period = remotePeriod;
-  SubscribeData.som = PROTOCOL_SOM_NOACK;  // no ack required
-
-
-  // Subscribe to Subscriptions ;)
-  scheduleTransmission(hoverboardCodes::protocolSubscriptions, localCount, localPeriod);
-}
-
-/***************************************************************************
  *    Triggers a periodic readout of data from the hoverboard
  *    It is necessary to set a callback if something should happen when the
  *    data arrives. Otherwise the data can just be read from the variable.
  ***************************************************************************/
-void HoverboardAPI::scheduleRead(hoverboardCodes code, int count, unsigned int period) {
+void HoverboardAPI::scheduleRead(Codes code, int count, unsigned int period, char som) {
 
   // Compose new Message, with ACK.
   PROTOCOL_MSG2 msg = {
@@ -209,14 +189,14 @@ void HoverboardAPI::scheduleRead(hoverboardCodes code, int count, unsigned int p
   writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Read value
 
   // Write into Subscriptions
-  writevals->code = hoverboardCodes::protocolSubscriptions;
+  writevals->code = Codes::protocolSubscriptions;
 
 
   // Code indicating which variable should be read. See params[] in protocol.c
   writesubscribe->code = code;
   writesubscribe->count = count;
   writesubscribe->period = period;
-  writesubscribe->som = PROTOCOL_SOM_NOACK;     // Readouts without ACK
+  writesubscribe->som = som;
 
   msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(*writesubscribe);
 
@@ -235,11 +215,11 @@ void HoverboardAPI::scheduleRead(hoverboardCodes code, int count, unsigned int p
 /***************************************************************************
  * Sends PWM values to hoverboard
  ***************************************************************************/
-void HoverboardAPI::sendPWM(int16_t pwm, int16_t steer) {
+void HoverboardAPI::sendPWM(int16_t pwm, int16_t steer, char som) {
 
-  // Compose new Message, no ACK needed.
+  // Compose new Message
   PROTOCOL_MSG2 msg = {
-    .SOM = PROTOCOL_SOM_NOACK,
+    .SOM = som,
   };
 
   // Prepare Message structure to write PWM values.
@@ -249,7 +229,7 @@ void HoverboardAPI::sendPWM(int16_t pwm, int16_t steer) {
 
   writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
 
-  writevals->code = hoverboardCodes::setPointPWM;
+  writevals->code = Codes::setPointPWM;
 
   writespeed->pwm[0] = pwm + steer;
   writespeed->pwm[1] = pwm - steer;
@@ -261,11 +241,11 @@ void HoverboardAPI::sendPWM(int16_t pwm, int16_t steer) {
 /***************************************************************************
  * Sends PWM values and Limits to hoverboard
  ***************************************************************************/
-void HoverboardAPI::sendPWMData(int16_t pwm, int16_t steer) {
+void HoverboardAPI::sendPWMData(int16_t pwm, int16_t steer, int speed_max_power, int speed_min_power, int speed_minimum_pwm, char som) {
 
-  // Compose new Message, no ACK needed.
+  // Compose new Message
   PROTOCOL_MSG2 msg = {
-    .SOM = PROTOCOL_SOM_NOACK,
+    .SOM = som,
   };
 
   // Prepare Message structure to write PWM values.
@@ -275,27 +255,27 @@ void HoverboardAPI::sendPWMData(int16_t pwm, int16_t steer) {
 
   writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
 
-  writevals->code = hoverboardCodes::setPointPWMData;
+  writevals->code = Codes::setPointPWMData;
 
   writespeed->pwm[0] = pwm + steer;
   writespeed->pwm[1] = pwm - steer;
-  writespeed->speed_max_power = 600;
-  writespeed->speed_min_power = -600;
-  writespeed->speed_minimum_pwm = 10;
+  writespeed->speed_max_power = speed_max_power;
+  writespeed->speed_min_power = speed_min_power;
+  writespeed->speed_minimum_pwm = speed_minimum_pwm;
 
 
-  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(writespeed);
+  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(*writespeed);
   protocol_post(&s, &msg);
 }
 
 /***************************************************************************
  * Sends Buzzer data to hoverboard
  ***************************************************************************/
-void HoverboardAPI::sendBuzzer(uint8_t buzzerFreq, uint8_t buzzerPattern, uint16_t buzzerLen) {
+void HoverboardAPI::sendBuzzer(uint8_t buzzerFreq, uint8_t buzzerPattern, uint16_t buzzerLen, char som) {
 
-  // Compose new Message, no ACK needed.
+  // Compose new Message
   PROTOCOL_MSG2 msg = {
-    .SOM = PROTOCOL_SOM_NOACK,
+    .SOM = som,
   };
 
   // Prepare Message structure to write buzzer values.
@@ -305,18 +285,101 @@ void HoverboardAPI::sendBuzzer(uint8_t buzzerFreq, uint8_t buzzerPattern, uint16
 
   writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
 
-  writevals->code = hoverboardCodes::setBuzzer;
+  writevals->code = Codes::setBuzzer;
 
   writebuzzer->buzzerFreq = buzzerFreq;
   writebuzzer->buzzerPattern = buzzerPattern;
   writebuzzer->buzzerLen = buzzerLen;
 
 
-  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(writebuzzer);
+  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(*writebuzzer);
   protocol_post(&s, &msg);
 }
 
+/***************************************************************************
+ * Sends enable to hoverboard
+ ***************************************************************************/
+void HoverboardAPI::sendEnable(uint8_t newEnable, char som) {
 
+  // Compose new Message
+  PROTOCOL_MSG2 msg = {
+    .SOM = som,
+  };
+
+  // Prepare Message structure to write buzzer values.
+  PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
+  uint8_t *writeenable = (uint8_t *) writevals->content;
+
+
+  writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
+
+  writevals->code = Codes::enableMotors;
+
+  *writeenable = newEnable;
+
+
+  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(*writeenable);
+  protocol_post(&s, &msg);
+}
+
+/***************************************************************************
+ * Reset statistic counters
+ ***************************************************************************/
+void HoverboardAPI::sendCounterReset(char som) {
+
+  // Compose new Message
+  PROTOCOL_MSG2 msg = {
+    .SOM = som,
+  };
+
+  // Prepare Message structure to write buzzer values.
+  PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
+  PROTOCOLCOUNT *writeprotocolcount = (PROTOCOLCOUNT *) writevals->content;
+
+
+  writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
+
+  writevals->code = Codes::setBuzzer;
+
+  writeprotocolcount->rx = 0;
+  writeprotocolcount->rxMissing = 0;
+  writeprotocolcount->tx = 0;
+  writeprotocolcount->txRetries = 0;
+  writeprotocolcount->txFailed = 0;
+  writeprotocolcount->unwantedacks = 0;
+  writeprotocolcount->unwantednacks = 0;
+  writeprotocolcount->unknowncommands = 0;
+  writeprotocolcount->unplausibleresponse = 0;
+
+  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(*writeprotocolcount);
+  protocol_post(&s, &msg);
+}
+
+/***************************************************************************
+ * Reset statistic counters
+ ***************************************************************************/
+void HoverboardAPI::resetCounters() {
+
+  s.ack.counters.rx = 0;
+  s.ack.counters.rxMissing = 0;
+  s.ack.counters.tx = 0;
+  s.ack.counters.txRetries = 0;
+  s.ack.counters.txFailed = 0;
+  s.ack.counters.unwantedacks = 0;
+  s.ack.counters.unwantednacks = 0;
+  s.ack.counters.unknowncommands = 0;
+  s.ack.counters.unplausibleresponse = 0;
+
+  s.noack.counters.rx = 0;
+  s.noack.counters.rxMissing = 0;
+  s.noack.counters.tx = 0;
+  s.noack.counters.txRetries = 0;
+  s.noack.counters.txFailed = 0;
+  s.noack.counters.unwantedacks = 0;
+  s.noack.counters.unwantednacks = 0;
+  s.noack.counters.unknowncommands = 0;
+  s.noack.counters.unplausibleresponse = 0;
+}
 
 /***************************************************************************
  * returns hall data. Readout has to be requested before with
