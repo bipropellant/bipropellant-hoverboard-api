@@ -95,14 +95,21 @@ void HoverboardAPI::printStats(Stream &port) {
   char buffer [100];
   extern PROTOCOLCOUNT ProtocolcountData;
 
-
+/*
   snprintf ( buffer, 100, "ACK RX: %4li TX: %4li RXmissing: %4li TXretries: %4i    ", s.ack.counters.rx, s.ack.counters.tx, s.ack.counters.rxMissing, s.ack.counters.txRetries);
   port.print(buffer);
   snprintf ( buffer, 100, "NOACK RX: %4li TX: %4li RXmissing: %4li TXretries: %4i    ", s.noack.counters.rx, s.noack.counters.tx, s.noack.counters.rxMissing, s.noack.counters.txRetries);
   port.print(buffer);
   snprintf ( buffer, 100, "Received RX: %4li TX: %4li RXmissing: %4li TXretries: %4i    ",  ProtocolcountData.rx, ProtocolcountData.tx, ProtocolcountData.rxMissing, ProtocolcountData.txRetries);
   port.print(buffer);
+*/
 
+  snprintf ( buffer, 100, "Local  RX: %4li TX: %4li RXmissing: %4li    ", s.ack.counters.rx + s.noack.counters.rx, s.ack.counters.tx + s.noack.counters.tx, s.ack.counters.rxMissing + s.noack.counters.rxMissing);
+  port.print(buffer);
+  snprintf ( buffer, 100, "Remote RX: %4li TX: %4li RXmissing: %4li    ",  ProtocolcountData.rx, ProtocolcountData.tx, ProtocolcountData.rxMissing);
+  port.print(buffer);
+  snprintf ( buffer, 100, "Missed Local->Remote %4li (%4li) Remote->Local %4li (%4li)", s.ack.counters.tx + s.noack.counters.tx - ProtocolcountData.rx, ProtocolcountData.rxMissing, ProtocolcountData.tx - s.ack.counters.rx - s.noack.counters.rx, s.ack.counters.rxMissing + s.noack.counters.rxMissing);
+  port.print(buffer);
   port.println();
 }
 
@@ -339,7 +346,7 @@ void HoverboardAPI::sendCounterReset(char som) {
 
   writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
 
-  writevals->code = Codes::setBuzzer;
+  writevals->code = Codes::protocolCountSum;
 
   writeprotocolcount->rx = 0;
   writeprotocolcount->rxMissing = 0;
