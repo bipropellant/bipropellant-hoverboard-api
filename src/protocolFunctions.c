@@ -41,3 +41,5 @@ int pwms[2] = {0, 0};
 int dspeeds[2] = {0,0};
 
 volatile ELECTRICAL_PARAMS electrical_measurements;
+
+TIME_STATS timeStats;

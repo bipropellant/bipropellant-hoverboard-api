@@ -51,6 +51,30 @@ typedef struct tag_HALL_PARAMS{
 
 extern volatile HALL_PARAMS local_hall_params[2];
 
+typedef struct tag_time_stats {
+    // times
+    long long now_us;
+    long long start_processing_us;
+    long long processing_in_us;
+    long long main_interval_us;
+    long long time_in_us;
+    long long main_delay_us;
+    long long main_processing_us;
+
+    long long nominal_delay_us;
+
+    // stats
+    long long us_lost;
+    unsigned int main_late_count;
+
+    float main_interval_ms;
+    float main_processing_ms;
+
+} TIME_STATS;
+
+extern TIME_STATS timeStats;
+
+
 #ifdef __cplusplus
 }
 #endif
