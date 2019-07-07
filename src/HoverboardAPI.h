@@ -1,11 +1,7 @@
-#ifndef HoverboardAPI_h
-#define HoverboardAPI_h
-#define LIBRARY_VERSION	0.0.1
+#pragma once
 
-
-extern "C" {
-  #include "protocol.h"
-}
+#include "protocol.h"
+#include "Stream.h"
 
 enum hoverboardCodes {
   protocolVersion          = 0x00,
@@ -47,15 +43,16 @@ class HoverboardAPI
 
     void scheduleTransmission(hoverboardCodes code, int count, unsigned int period);
 
-    void scheduleScheduling(hoverboardCodes remoteCode, int remoteCount, unsigned int remotePeriod, unsigned int localPeriod, int localCount);
-
 
     void scheduleRead(hoverboardCodes code, int count, unsigned int period);
 
     void printStats(Stream &Port);
     void sendBuzzer(uint8_t buzzerFreq, uint8_t buzzerPattern, uint16_t buzzerLen);
 
-    PARAMSTAT_FN setParamHandler(hoverboardCodes code, PARAMSTAT_FN callback);
+    PARAMSTAT_FN updateParamHandler(hoverboardCodes code, PARAMSTAT_FN callback);
+    int updateParamVariable(hoverboardCodes code, void *ptr, int len);
+
+
 
     int getTxBufferLevel();
 
@@ -71,5 +68,4 @@ class HoverboardAPI
 
 
 };
-#endif
 

@@ -1,10 +1,5 @@
-#include "hallinterrupts.h"
 #include "protocol.h"
-#include "stm32f1xx_hal.h"
-#include "bldc.h"
-
-// Called to reset the system from protocol. Not needed here.
-void resetSystem() {}
+#include <stdio.h>
 
 uint32_t noTick(void) { return 0; };
 uint32_t (*HAL_GetTick)(void) = noTick;
@@ -15,29 +10,31 @@ void (*HAL_Delay)(uint32_t Delay) = noDelay;
 void noReset(void) {};
 void (*HAL_NVIC_SystemReset)(void) = noReset;
 
-//////////////////////////////////////////////
-// Function pointer which can be set for "debugging"
-void noprint(const char str[]) {};
-void (*consoleLog)(const char str[]) = noprint;
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// Variable & Functions for 0x02 hall data
+
+volatile PROTOCOL_HALL_DATA_STRUCT HallData[2];
 
 
-uint8_t debug_out=0;
-uint8_t disablepoweroff=0;
-int powerofftimer=0;
-uint8_t buzzerFreq=0;    // global variable for the buzzer pitch. can be 1, 2, 3, 4, 5, 6, 7...
-uint8_t buzzerPattern=0; // global variable for the buzzer pattern. can be 1, 2, 3, 4, 5, 6, 7...
-uint16_t buzzerLen=0;
-uint8_t enablescope=0; // enable scope on values
-int steer=0; // global variable for steering. -1000 to 1000
-int speed=0; // global variable for speed. -1000 to 1000
+////////////////////////////////////////////////////////////////////////////////////////////
+// Variable & Functions for 0x08 electrical_measurements
 
-uint8_t enable=0; // global variable for motor enable
-volatile uint32_t timeout=0; // global variable for timeout
+volatile PROTOCOL_ELECTRICAL_PARAMS electrical_measurements;
 
-volatile HALL_DATA_STRUCT HallData[2];
-volatile HALL_PARAMS local_hall_params[2];
 
-int pwms[2] = {0, 0};
-int dspeeds[2] = {0,0};
+////////////////////////////////////////////////////////////////////////////////////////////
+// initialize protocol and register functions
+int setup_protocol() {
 
-volatile ELECTRICAL_PARAMS electrical_measurements;
+    int errors = 0;
+
+        errors += setParamVariable( 0x08, UI_NONE, (void *)&electrical_measurements, sizeof(PROTOCOL_ELECTRICAL_PARAMS), PARAM_RW);
+        setParamHandler(0x08, NULL);
+
+        errors += setParamVariable( 0x02, UI_NONE, (void *)&HallData,                sizeof(HallData), PARAM_RW);
+        setParamHandler(0x02, NULL);
+
+    return errors;
+
+}
