@@ -1,23 +1,12 @@
 /**********************************************************************************************
- * Arduino HoverboardAPI Library - Version 0.0.1
- * Arduino PID Library - Version 0.0.1
- * by Beat at fixme.ch and Philipp hacknology.de
- *
- * This Library is licensed under a GPLv3 License
+ * HoverboardAPI Library - Version 0.0.2
  **********************************************************************************************/
 
-#if ARDUINO >= 100
-  #include "Arduino.h"
-#else
-  #include "WProgram.h"
-#endif
-
 #include "HoverboardAPI.h"
-
 #include "protocol.h"
-#include "hallinterrupts.h"
-#include "stm32f1xx_hal.h"
-#include "bldc.h"
+#include "protocol_private.h"
+#include "protocolFunctions.h"
+#include <stdio.h>
 
 
 
@@ -32,11 +21,17 @@
  *    HoverboardAPI hoverboard = HoverboardAPI(serialWrapper);
  *
  ***************************************************************************/
+
+extern "C" {
+  extern void (*delay)(uint32_t ms);
+  extern unsigned long (*millis)(void);
+}
+
 inline uint32_t tickWrapper(void) { return (uint32_t) millis(); }
-void printWrapper(const char str[]) {  Serial.print(str); }
 
 HoverboardAPI::HoverboardAPI(int (*send_serial_data)( unsigned char *data, int len )) {
   if(protocol_init(&s) != 0) while(1) {};
+  setup_protocol();
   s.send_serial_data = send_serial_data;
   s.send_serial_data_wait = send_serial_data;
   s.allow_ascii = 0;       // do not allow ASCII parsing.
@@ -44,7 +39,6 @@ HoverboardAPI::HoverboardAPI(int (*send_serial_data)( unsigned char *data, int l
 //  s.timeout2 = 10; // timeout between characters
   HAL_GetTick = tickWrapper;
   HAL_Delay = delay;
-  consoleLog = printWrapper;
   setParamHandler(Codes::sensHall, NULL); // Disable callbacks for Hall
 }
 
@@ -73,23 +67,29 @@ int HoverboardAPI::getTxBufferLevel() {
 /***************************************************************************
  * Sets a callback Function to handle Protocol Read or Write events
  ***************************************************************************/
-extern "C" PARAMSTAT params[];
-extern "C" int paramcount;
 
-PARAMSTAT_FN HoverboardAPI::setParamHandler(Codes code, PARAMSTAT_FN callback) {
-  PARAMSTAT_FN old = NULL;
-
-  for (int i = 0; i < paramcount; i++) {
-    if (params[i].code == code) {
-        old = params[i].fn;
-        params[i].fn = callback;
-    }
-  }
+PARAMSTAT_FN HoverboardAPI::updateParamHandler(Codes code, PARAMSTAT_FN callback) {
+  PARAMSTAT_FN old = getParamHandler(code);
+  setParamHandler(code, callback);
   return old;
 }
 
 /***************************************************************************
- * Print Protocol Statistics. Remote Data has to be requested firs.
+ * Sets a Variable into which data is stored on receive and taken from for
+ * scheduled sending.
+ ***************************************************************************/
+
+int HoverboardAPI::updateParamVariable(Codes code, void *ptr, int len) {
+  if(params[code] != NULL) {
+    return setParamVariable(code, params[code]->ui_type, ptr, len, params[code]->rw );
+  }
+
+  return 1;
+}
+
+
+/***************************************************************************
+ * Print Protocol Statistics. Remote Data has to be requested first.
  ***************************************************************************/
 void HoverboardAPI::printStats(Stream &port) {
   char buffer [100];
@@ -155,27 +155,20 @@ float HoverboardAPI::getMotorAmpsAvg(uint8_t motor) {
  * Schedules periodic transmission of value from control to hoverboard
  * count -1 for indefinetely
  ***************************************************************************/
-extern "C" {
-  extern SUBSCRIBEDATA SubscribeData;
-  extern void fn_SubscribeData ( PROTOCOL_STAT *s, PARAMSTAT *param, uint8_t fn_type );
-}
 
 void HoverboardAPI::scheduleTransmission(Codes code, int count, unsigned int period, char som) {
-  SUBSCRIBEDATA subscribeTemp = SubscribeData;
-
-  SubscribeData.code = code;
-  SubscribeData.count = count;
+  PROTOCOL_SUBSCRIBEDATA SubscribeData;
+  SubscribeData.code   = code;
+  SubscribeData.count  = count;
   SubscribeData.period = period;
   SubscribeData.som = som;
 
-  for (int i = 0; i < paramcount; i++) {
-    if (params[i].code == Codes::protocolSubscriptions) {
-      fn_SubscribeData( &s, &params[i], FN_TYPE_POST_WRITE );
-    }
+  // Use native Subscription function to fill in array.
+  if(params[code] && params[code]->fn) {
+    params[code]->fn( &s, params[code], FN_TYPE_POST_WRITE, (unsigned char*) &SubscribeData, sizeof(SubscribeData) );
   }
-  SubscribeData = subscribeTemp;
-
 }
+
 
 /***************************************************************************
  *    Triggers a periodic readout of data from the hoverboard
@@ -191,7 +184,7 @@ void HoverboardAPI::scheduleRead(Codes code, int count, unsigned int period, cha
 
   // Prepare Message structure to write subscription values.
   PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
-  SUBSCRIBEDATA *writesubscribe = (SUBSCRIBEDATA *) writevals->content;
+  PROTOCOL_SUBSCRIBEDATA *writesubscribe = (PROTOCOL_SUBSCRIBEDATA *) writevals->content;
 
   writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Read value
 
@@ -206,14 +199,6 @@ void HoverboardAPI::scheduleRead(Codes code, int count, unsigned int period, cha
   writesubscribe->som = som;
 
   msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(*writesubscribe);
-
-/*
-  unsigned char* charPtr=(unsigned char*)writesubscribe;
-  int i;
-  printf("\n\rstructure size ESP: %zu bytes  ",sizeof(SUBSCRIBEDATA));
-  for(i=0;i<sizeof(SUBSCRIBEDATA);i++)
-      printf("%02x ",charPtr[i]);
-*/
 
   protocol_post(&s, &msg);
 }
@@ -231,7 +216,7 @@ void HoverboardAPI::sendPWM(int16_t pwm, int16_t steer, char som) {
 
   // Prepare Message structure to write PWM values.
   PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
-  PWM_DATA *writespeed = (PWM_DATA *) writevals->content;
+  PROTOCOL_PWM_DATA *writespeed = (PROTOCOL_PWM_DATA *) writevals->content;
 
 
   writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
@@ -257,7 +242,7 @@ void HoverboardAPI::sendPWMData(int16_t pwm, int16_t steer, int speed_max_power,
 
   // Prepare Message structure to write PWM values.
   PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
-  PWM_DATA *writespeed = (PWM_DATA *) writevals->content;
+  PROTOCOL_PWM_DATA *writespeed = (PROTOCOL_PWM_DATA *) writevals->content;
 
 
   writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
@@ -287,7 +272,7 @@ void HoverboardAPI::sendBuzzer(uint8_t buzzerFreq, uint8_t buzzerPattern, uint16
 
   // Prepare Message structure to write buzzer values.
   PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
-  BUZZER_DATA *writebuzzer = (BUZZER_DATA *) writevals->content;
+  PROTOCOL_BUZZER_DATA *writebuzzer = (PROTOCOL_BUZZER_DATA *) writevals->content;
 
 
   writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value

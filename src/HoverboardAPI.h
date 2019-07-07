@@ -1,36 +1,35 @@
-#ifndef HoverboardAPI_h
-#define HoverboardAPI_h
-#define LIBRARY_VERSION	0.0.1
-
+#pragma once
 
 #include "protocol.h"
+#include "Stream.h"
 
 class HoverboardAPI
 {
   public:
 
     enum Codes {
-      protocolVersion          = 0x00,
-      protocolSubscriptions    = 0x22,
-      protocolCountSum         = 0x23,
-      protocolCountACK         = 0x23,
-      protocolCountnoACK       = 0x23,
-      sensHall                 = 0x02,
-      sensElectrical           = 0x08,
-      enableMotors             = 0x09,
-      disablePoweroff          = 0x0A,
-      debugOut                 = 0x0B,
-      setPointPWMData          = 0x0D,
-      setPointPWM              = 0x0E,
-      setBuzzer                = 0x21,
-    };
+  protocolVersion          = 0x00,
+  protocolSubscriptions    = 0x22,
+  protocolCountSum         = 0x23,
+  protocolCountACK         = 0x23,
+  protocolCountnoACK       = 0x23,
+  sensHall                 = 0x02,
+  sensElectrical           = 0x08,
+  enableMotors             = 0x09,
+  disablePoweroff          = 0x0A,
+  debugOut                 = 0x0B,
+  setPointPWMData          = 0x0D,
+  setPointPWM              = 0x0E,
+  setBuzzer                = 0x21,
+};
 
   //commonly used functions **************************************************************************
     HoverboardAPI(int (*send_serial_data)( unsigned char *data, int len ));          // * constructor.
 
     void protocolPush(unsigned char byte);
     void protocolTick();
-    PARAMSTAT_FN setParamHandler(Codes code, PARAMSTAT_FN callback);
+    PARAMSTAT_FN updateParamHandler(Codes code, PARAMSTAT_FN callback);
+    int updateParamVariable(Codes code, void *ptr, int len);
 
     void scheduleTransmission(Codes code, int count, unsigned int period, char som = PROTOCOL_SOM_NOACK);
 
@@ -61,5 +60,4 @@ class HoverboardAPI
 
 
 };
-#endif
 
