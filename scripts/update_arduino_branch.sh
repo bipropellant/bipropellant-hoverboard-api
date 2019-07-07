@@ -7,7 +7,7 @@ setup_git() {
 
 flatten_submodule() {
   git checkout -b master_arduino
-  
+
   git rm --cached src/hbprotocol # delete reference to submodule HEAD (no trailing slash)
   git rm .gitmodules             # if you have more than one submodules,
                                  # you need to edit this file instead of deleting!
@@ -16,10 +16,10 @@ flatten_submodule() {
   rm -rf src/hbprotocol/README.md
   rm -rf scripts
   rm -rf .travis.yml
-  mv src/hbprotocol/* src/
-  rm -rf src/hbprotocol
+#  mv src/hbprotocol/* src/
+#  rm -rf src/hbprotocol
   git add .
-  git mv src/* ./
+#  git mv src/* ./
 
   git commit --message "Auto convert to Arduino Library ($TRAVIS_BUILD_NUMBER)"
 }
