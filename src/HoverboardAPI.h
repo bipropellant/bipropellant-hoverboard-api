@@ -48,6 +48,12 @@ class HoverboardAPI
     int getTxBufferLevel();
     double getSpeed_kmh();
     double getSteer_kmh();
+    double getSpeed_mms();
+    double getSteer_mms();
+    double getSpeed0_kmh();
+    double getSpeed1_kmh();
+    double getSpeed0_mms();
+    double getSpeed1_mms();
 
     void resetCounters();
     void printStats(Stream &Port);

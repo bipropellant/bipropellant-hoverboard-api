@@ -7,19 +7,52 @@
 #######################################
 
 HoverboardAPI	KEYWORD1
+PARAMSTAT_FN    KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 
-#SetMode	KEYWORD2
-#Compute	KEYWORD2
-#...
+protocolPush            KEYWORD2
+protocolTick            KEYWORD2
+updateParamHandler      KEYWORD2
+updateParamVariable     KEYWORD2
+scheduleTransmission    KEYWORD2
+requestRead             KEYWORD2
+scheduleRead            KEYWORD2
+sendPWM                 KEYWORD2
+sendPWMData             KEYWORD2
+sendEnable              KEYWORD2
+sendBuzzer              KEYWORD2
+sendCounterReset        KEYWORD2
+getBatteryVoltage       KEYWORD2
+getMotorAmpsAvg         KEYWORD2
+getTxBufferLevel        KEYWORD2
+getSpeed_kmh            KEYWORD2
+getSteer_kmh            KEYWORD2
+getSpeed_mms            KEYWORD2
+getSteer_mms            KEYWORD2
+getSpeed0_kmh           KEYWORD2
+getSpeed1_kmh           KEYWORD2
+getSpeed0_mms           KEYWORD2
+getSpeed1_mms           KEYWORD2
+resetCounters           KEYWORD2
+printStats              KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
 #######################################
 
-#AUTOMATIC	LITERAL1
-#MANUAL	LITERAL1
-#DIRECT	LITERAL1
+  Codes::protocolVersion           LITERAL1
+  Codes::protocolSubscriptions     LITERAL1
+  Codes::protocolCountSum          LITERAL1
+  Codes::protocolCountACK          LITERAL1
+  Codes::protocolCountnoACK        LITERAL1
+  Codes::sensHall                  LITERAL1
+  Codes::sensElectrical            LITERAL1
+  Codes::enableMotors              LITERAL1
+  Codes::disablePoweroff           LITERAL1
+  Codes::debugOut                  LITERAL1
+  Codes::setPointPWMData           LITERAL1
+  Codes::setPointPWM               LITERAL1
+  Codes::setBuzzer                 LITERAL1

@@ -23,11 +23,11 @@
  ***************************************************************************/
 
 extern "C" {
-  extern void (*delay)(uint32_t ms);
-  extern unsigned long (*millis)(void);
+  extern void delay(uint32_t ms);
+  extern unsigned long millis(void);
 }
 
-inline uint32_t tickWrapper(void) { return (uint32_t) millis(); }
+uint32_t tickWrapper(void) { return (uint32_t) millis(); }
 
 HoverboardAPI::HoverboardAPI(int (*send_serial_data)( unsigned char *data, int len )) {
   if(protocol_init(&s) != 0) while(1) {};
@@ -383,4 +383,28 @@ double HoverboardAPI::getSpeed_kmh() {
 
 double HoverboardAPI::getSteer_kmh() {
   return   (HallData[0].HallSpeed_mm_per_s * 3600.0 / 1000000.0 )- getSpeed_kmh();
+}
+
+double HoverboardAPI::getSpeed_mms() {
+  return   (HallData[0].HallSpeed_mm_per_s + HallData[1].HallSpeed_mm_per_s) / 2.0;
+}
+
+double HoverboardAPI::getSteer_mms() {
+  return   HallData[0].HallSpeed_mm_per_s - getSpeed_mms();
+}
+
+double HoverboardAPI::getSpeed0_mms() {
+  return   HallData[0].HallSpeed_mm_per_s;
+}
+
+double HoverboardAPI::getSpeed1_mms() {
+  return   HallData[1].HallSpeed_mm_per_s;
+}
+
+double HoverboardAPI::getSpeed0_kmh() {
+  return   HallData[0].HallSpeed_mm_per_s * 3600.0 / 1000000.0;
+}
+
+double HoverboardAPI::getSpeed1_kmh() {
+  return   HallData[1].HallSpeed_mm_per_s * 3600.0 / 1000000.0;
 }
