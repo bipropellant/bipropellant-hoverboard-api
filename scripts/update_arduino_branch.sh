@@ -25,7 +25,7 @@ flatten_submodule() {
 }
 
 upload_files() {
-  git remote add upload https://${GITHUB_TOKEN}@github.com/p-h-a-i-l/HoverboardAPI.git > /dev/null 2>&1
+  git remote add upload https://${GITHUB_TOKEN}@github.com/bipropellant/bipropellant-hoverboard-api.git > /dev/null 2>&1
   git push --quiet --set-upstream upload master_arduino -f
 }
 
