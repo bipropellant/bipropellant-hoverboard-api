@@ -1,14 +1,5 @@
-#include "protocol.h"
+#include "hbprotocol/protocol.h"
 #include <stdio.h>
-
-uint32_t noTick(void) { return 0; };
-uint32_t (*HAL_GetTick)(void) = noTick;
-
-void noDelay(uint32_t Delay) {};
-void (*HAL_Delay)(uint32_t Delay) = noDelay;
-
-void noReset(void) {};
-void (*HAL_NVIC_SystemReset)(void) = noReset;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "protocol.h"
+#include "hbprotocol/protocol.h"
 #include "Stream.h"
 
 class HoverboardAPI

@@ -3,8 +3,8 @@
  **********************************************************************************************/
 
 #include "HoverboardAPI.h"
-#include "protocol.h"
-#include "protocol_private.h"
+#include "hbprotocol/protocol.h"
+#include "hbprotocol/protocol_private.h"
 #include "protocolFunctions.h"
 #include <stdio.h>
 
@@ -37,8 +37,8 @@ HoverboardAPI::HoverboardAPI(int (*send_serial_data)( unsigned char *data, int l
   s.allow_ascii = 0;       // do not allow ASCII parsing.
 //  s.timeout1 = 50; //timeout for ACK
 //  s.timeout2 = 10; // timeout between characters
-  HAL_GetTick = tickWrapper;
-  HAL_Delay = delay;
+  protocol_GetTick = tickWrapper;
+  protocol_Delay = delay;
   setParamHandler(Codes::sensHall, NULL); // Disable callbacks for Hall
 }
 
