@@ -20,7 +20,7 @@ before_install:
 #    - arduino --install-library "Adafruit ILI9341","Adafruit GFX Library"
     
 script:
-    - build_io_platforms
+    - scripts/build_io_platforms
 
 
 deploy:
