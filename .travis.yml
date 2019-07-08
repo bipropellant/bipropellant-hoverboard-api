@@ -13,7 +13,7 @@ env:
         - PRETTYNAME="Bipropellant Hoverboard API"
     
 before_install:
-    - source <(curl -SLs https://raw.githubusercontent.com/adafruit/travis-ci-arduino/master/install.sh)
+    - bash scripts/installArduino.sh
     
 #install:
 #    - arduino --install-library "Adafruit ILI9341","Adafruit GFX Library"
