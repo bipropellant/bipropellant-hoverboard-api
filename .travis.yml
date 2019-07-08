@@ -13,7 +13,7 @@ env:
         - PRETTYNAME="Bipropellant Hoverboard API"
     
 before_install:
-    - source < scripts/installArduino.sh
+    - source <(cat scripts/installArduino.sh)
 #    - source <(curl -SLs https://raw.githubusercontent.com/adafruit/travis-ci-arduino/master/install.sh)    
 
 #install:
