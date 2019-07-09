@@ -161,11 +161,12 @@ void HoverboardAPI::scheduleTransmission(Codes code, int count, unsigned int per
   SubscribeData.code   = code;
   SubscribeData.count  = count;
   SubscribeData.period = period;
+  SubscribeData.next_send_time = 0;
   SubscribeData.som = som;
 
   // Use native Subscription function to fill in array.
-  if(params[code] && params[code]->fn) {
-    params[code]->fn( &s, params[code], FN_TYPE_POST_WRITE, (unsigned char*) &SubscribeData, sizeof(SubscribeData) );
+  if(params[Codes::protocolSubscriptions] && params[Codes::protocolSubscriptions]->fn) {
+    params[Codes::protocolSubscriptions]->fn( &s, params[Codes::protocolSubscriptions], FN_TYPE_POST_WRITE, (unsigned char*) &SubscribeData, sizeof(SubscribeData) );
   }
 }
 

@@ -17,6 +17,7 @@ HoverboardAPI hoverboard = HoverboardAPI(serialWrapper);
 
 // Variable for PWM
 PROTOCOL_PWM_DATA PWMData;
+PROTOCOL_BUZZER_DATA buzzer = {8, 0, 50};
 
 void setup() {
   Serial.begin(115200);   // Serial for debugging
@@ -32,6 +33,14 @@ void setup() {
   hoverboard.updateParamVariable(HoverboardAPI::Codes::setPointPWM, &PWMData, sizeof(PWMData));
   hoverboard.scheduleTransmission(HoverboardAPI::Codes::setPointPWM, -1, 30);
 
+  // Send PWM to 10% duty cycle for wheel1, 15% duty cycle for wheel2. Wheel2 is running backwards.
+  PWMData.pwm[0] = 100.0;
+  PWMData.pwm[1] = -150.0;
+
+  // Register Variable and send Buzzer values periodically
+  hoverboard.updateParamVariable(HoverboardAPI::Codes::setBuzzer, &buzzer, sizeof(buzzer));
+  hoverboard.scheduleTransmission(HoverboardAPI::Codes::setBuzzer, -1, 200);
+
   // Set maxium PWM to 400, Minimum to -400 and threshold to 30. Require ACK (Message will be resend when not Acknowledged)
   hoverboard.sendPWMData(0, 0, 400, -400, 30, PROTOCOL_SOM_ACK);
 
@@ -39,9 +48,6 @@ void setup() {
 
 void loop() {
 
-  // Send PWM to 10% duty cycle for wheel1, 15% duty cycle for wheel2. Wheel2 is running backwards.
-  PWMData.pwm[0] = 100.0;
-  PWMData.pwm[1] = -150.0;
 
   // Print Speed on debug Serial.
   Serial.print("Motor Speed: ");
@@ -53,16 +59,14 @@ void loop() {
   Serial.print(hoverboard.getBatteryVoltage());
   Serial.println("V");
 
-  // Set Buzzer to Frequency 4, Pattern 0 and 50ms.
-  hoverboard.sendBuzzer(4, 0, 50);
+  // Create annoying melody
+  buzzer.buzzerFreq++;
 
 
-
-
-  // Delay loop() for 1000 ms use the time to send and receive UART protocol every 100 microseconds
+  // Delay loop() for 300 ms use the time to send and receive UART protocol every 100 microseconds
   // This way messages which are received can be processed and scheduled messages can be sent.
   unsigned long start = millis();
-  while (millis() < start + 1000){
+  while (millis() < start + 300){
 
     // Read and Process Incoming data
     int i=0;
