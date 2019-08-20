@@ -1,7 +1,7 @@
 #pragma once
 
 #include "hbprotocol/protocol.h"
-#include "Stream.h"
+//#include "Stream.h"
 
 class HoverboardAPI
 {
@@ -14,6 +14,7 @@ class HoverboardAPI
   protocolCountACK         = 0x23,
   protocolCountnoACK       = 0x23,
   sensHall                 = 0x02,
+  setSpeed                 = 0x03,
   sensElectrical           = 0x08,
   enableMotors             = 0x09,
   disablePoweroff          = 0x0A,
@@ -21,6 +22,10 @@ class HoverboardAPI
   setPointPWMData          = 0x0D,
   setPointPWM              = 0x0E,
   setBuzzer                = 0x21,
+  setSpeedKp               = 0x85,
+  setSpeedKi               = 0x86,
+  setSpeedKd               = 0x87,
+  setSpeedIncrLimit        = 0x88
 };
 
   //commonly used functions **************************************************************************
@@ -38,7 +43,11 @@ class HoverboardAPI
 
 
     void sendPWM(int16_t pwm, int16_t steer = 0, char som = PROTOCOL_SOM_NOACK);
+    void sendDifferentialPWM(int16_t left_cmd, int16_t right_cmd, char som = PROTOCOL_SOM_NOACK);
     void sendPWMData(int16_t pwm, int16_t steer = 0, int speed_max_power = 600, int speed_min_power = -600, int speed_minimum_pwm = 10, char som = PROTOCOL_SOM_ACK);
+    void sendSpeedData(double left_speed, double right_speed, int16_t max_power, int16_t min_speed, char som = PROTOCOL_SOM_NOACK);
+    void sendPIDControl(int16_t Kp, int16_t Ki, int16_t Kd, int16_t speed_increment, char som = PROTOCOL_SOM_NOACK);
+
     void sendEnable(uint8_t newEnable, char som = PROTOCOL_SOM_ACK);
     void sendBuzzer(uint8_t buzzerFreq = 4, uint8_t buzzerPattern = 0, uint16_t buzzerLen = 100, char som = PROTOCOL_SOM_NOACK);
     void sendCounterReset(char som = PROTOCOL_SOM_ACK);
@@ -55,8 +64,11 @@ class HoverboardAPI
     double getSpeed0_mms();
     double getSpeed1_mms();
 
+    double getPosition0_mm();
+    double getPosition1_mm();
+
     void resetCounters();
-    void printStats(Stream &Port);
+    void printStats();
 
 
     //available but not commonly used functions ********************************************************
