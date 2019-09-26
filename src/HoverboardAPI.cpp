@@ -262,9 +262,7 @@ void HoverboardAPI::sendDifferentialPWM(int16_t left_cmd, int16_t right_cmd, cha
   PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
   PROTOCOL_PWM_DATA *writespeed = (PROTOCOL_PWM_DATA *) writevals->content;
 
-
   writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
-
   writevals->code = Codes::setPointPWM;
 
   writespeed->pwm[0] = left_cmd;
@@ -277,8 +275,12 @@ void HoverboardAPI::sendDifferentialPWM(int16_t left_cmd, int16_t right_cmd, cha
 /***************************************************************************
  * Sends PWM values and Limits to hoverboard
  ***************************************************************************/
-void HoverboardAPI::sendPWMData(int16_t pwm, int16_t steer, int speed_max_power, int speed_min_power, int speed_minimum_pwm, char som) {
-
+void HoverboardAPI::sendPWMData(int16_t pwm,
+				int16_t steer,
+				int speed_max_power,
+				int speed_min_power,
+				int speed_minimum_pwm,
+				char som) {
   // Compose new Message
   PROTOCOL_MSG2 msg = {
     .SOM = som,
@@ -288,9 +290,7 @@ void HoverboardAPI::sendPWMData(int16_t pwm, int16_t steer, int speed_max_power,
   PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
   PROTOCOL_PWM_DATA *writespeed = (PROTOCOL_PWM_DATA *) writevals->content;
 
-
   writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
-
   writevals->code = Codes::setPointPWMData;
 
   writespeed->pwm[0] = pwm + steer;
@@ -298,7 +298,6 @@ void HoverboardAPI::sendPWMData(int16_t pwm, int16_t steer, int speed_max_power,
   writespeed->speed_max_power = speed_max_power;
   writespeed->speed_min_power = speed_min_power;
   writespeed->speed_minimum_pwm = speed_minimum_pwm;
-
 
   msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(*writespeed);
   protocol_post(&s, &msg);
@@ -320,14 +319,12 @@ void HoverboardAPI::sendSpeedData(double left_speed, double right_speed, int16_t
   writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
   writevals->code = Codes::setSpeed;
 
-  //      int32_t wanted_speed_mm_per_sec[2];
   writespeed->wanted_speed_mm_per_sec[0] = left_speed * 1000;
   writespeed->wanted_speed_mm_per_sec[1] = right_speed * 1000;
   writespeed->speed_max_power = max_power;
   writespeed->speed_min_power = -max_power;
   writespeed->speed_minimum_speed = min_speed;
 
-  // Only send 2x4 bytes -- speed control plus 2x4 bytes for limits
   msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + 8 + 8 + 4;
   protocol_post(&s, &msg);
 }
@@ -344,8 +341,7 @@ void HoverboardAPI::sendPIDControl(int16_t Kp, int16_t Ki, int16_t Kd, int16_t s
   uint16_t *value = (uint16_t*)writevals->content;
 
   // Kp, Ki, Kd, Speed Incr
-  // Original values 20 10 0 20
-  // more or less ok: 50 20 10 30
+  // Original values [20 10 0 20]. Works better on my motors (A.M.): [50 20 10 30] 
   writevals->code = Codes::setSpeedKp;
   
   *value = Kp;

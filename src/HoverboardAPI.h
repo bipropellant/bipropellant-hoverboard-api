@@ -1,7 +1,9 @@
 #pragma once
 
 #include "hbprotocol/protocol.h"
-//#include "Stream.h"
+#ifdef ARDUINO
+#include "Stream.h"
+#endif
 
 class HoverboardAPI
 {
