@@ -15,6 +15,7 @@ extern int setup_protocol();
 
 extern volatile PROTOCOL_ELECTRICAL_PARAMS electrical_measurements;
 extern volatile PROTOCOL_HALL_DATA_STRUCT HallData[2];
+extern volatile PROTOCOL_SPEED_DATA SpeedData;
 
 #ifdef __cplusplus
 }

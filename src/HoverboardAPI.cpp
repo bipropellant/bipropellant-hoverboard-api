@@ -22,10 +22,35 @@
  *
  ***************************************************************************/
 
+#ifdef ARDUINO
 extern "C" {
   extern void delay(uint32_t ms);
   extern unsigned long millis(void);
 }
+#else
+#include <unistd.h>
+#include <time.h>
+
+void delay(uint32_t ms) { 
+  usleep (ms*1000); 
+}
+
+static uint64_t ts_start = 0;
+
+unsigned long millis() { 
+  struct timespec ts;
+
+  if (ts_start == 0) {
+    clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
+    ts_start = (uint64_t)ts.tv_sec * (uint64_t)1000 + (uint64_t)(ts.tv_nsec / 1000000L) ;
+  }
+
+  clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
+  uint64_t ts_now = (uint64_t)ts.tv_sec * (uint64_t)1000 + (uint64_t)(ts.tv_nsec / 1000000L) ;
+
+  return (uint32_t)(ts_now - ts_start);
+}
+#endif
 
 uint32_t tickWrapper(void) { return (uint32_t) millis(); }
 
@@ -91,26 +116,23 @@ int HoverboardAPI::updateParamVariable(Codes code, void *ptr, int len) {
 /***************************************************************************
  * Print Protocol Statistics. Remote Data has to be requested first.
  ***************************************************************************/
-void HoverboardAPI::printStats(Stream &port) {
-  char buffer [100];
-  extern PROTOCOLCOUNT ProtocolcountData;
+void HoverboardAPI::printStats() {
+//   char buffer [100];
+   extern PROTOCOLCOUNT ProtocolcountData;
 
-/*
-  snprintf ( buffer, 100, "ACK RX: %4li TX: %4li RXmissing: %4li TXretries: %4i    ", s.ack.counters.rx, s.ack.counters.tx, s.ack.counters.rxMissing, s.ack.counters.txRetries);
-  port.print(buffer);
-  snprintf ( buffer, 100, "NOACK RX: %4li TX: %4li RXmissing: %4li TXretries: %4i    ", s.noack.counters.rx, s.noack.counters.tx, s.noack.counters.rxMissing, s.noack.counters.txRetries);
-  port.print(buffer);
-  snprintf ( buffer, 100, "Received RX: %4li TX: %4li RXmissing: %4li TXretries: %4i    ",  ProtocolcountData.rx, ProtocolcountData.tx, ProtocolcountData.rxMissing, ProtocolcountData.txRetries);
-  port.print(buffer);
-*/
+// /*
+//   snprintf ( buffer, 100, "ACK RX: %4li TX: %4li RXmissing: %4li TXretries: %4i    ", s.ack.counters.rx, s.ack.counters.tx, s.ack.counters.rxMissing, s.ack.counters.txRetries);
+//   port.print(buffer);
+//   snprintf ( buffer, 100, "NOACK RX: %4li TX: %4li RXmissing: %4li TXretries: %4i    ", s.noack.counters.rx, s.noack.counters.tx, s.noack.counters.rxMissing, s.noack.counters.txRetries);
+//   port.print(buffer);
+//   snprintf ( buffer, 100, "Received RX: %4li TX: %4li RXmissing: %4li TXretries: %4i    ",  ProtocolcountData.rx, ProtocolcountData.tx, ProtocolcountData.rxMissing, ProtocolcountData.txRetries);
+//   port.print(buffer);
+// */
 
-  snprintf ( buffer, 100, "Local  RX: %4li TX: %4li RXmissing: %4li    ", s.ack.counters.rx + s.noack.counters.rx, s.ack.counters.tx + s.noack.counters.tx, s.ack.counters.rxMissing + s.noack.counters.rxMissing);
-  port.print(buffer);
-  snprintf ( buffer, 100, "Remote RX: %4li TX: %4li RXmissing: %4li    ",  ProtocolcountData.rx, ProtocolcountData.tx, ProtocolcountData.rxMissing);
-  port.print(buffer);
-  snprintf ( buffer, 100, "Missed Local->Remote %4li (%4li) Remote->Local %4li (%4li)", s.ack.counters.tx + s.noack.counters.tx - ProtocolcountData.rx, ProtocolcountData.rxMissing, ProtocolcountData.tx - s.ack.counters.rx - s.noack.counters.rx, s.ack.counters.rxMissing + s.noack.counters.rxMissing);
-  port.print(buffer);
-  port.println();
+  // printf ( "Local  RX: %4d TX: %4d RXmissing: %4d    ", s.ack.counters.rx + s.noack.counters.rx, s.ack.counters.tx + s.noack.counters.tx, s.ack.counters.rxMissing + s.noack.counters.rxMissing);
+  // printf ( "Remote RX: %4d TX: %4d RXmissing: %4d    ",  ProtocolcountData.rx, ProtocolcountData.tx, ProtocolcountData.rxMissing);
+  // printf ( "Missed Local->Remote %4d (%4d) Remote->Local %4d (%4d)", s.ack.counters.tx + s.noack.counters.tx - ProtocolcountData.rx, ProtocolcountData.rxMissing, ProtocolcountData.tx - s.ack.counters.rx - s.noack.counters.rx, s.ack.counters.rxMissing + s.noack.counters.rxMissing);
+  // printf("\n");
 }
 
 
@@ -209,7 +231,6 @@ void HoverboardAPI::scheduleRead(Codes code, int count, unsigned int period, cha
  * Sends PWM values to hoverboard
  ***************************************************************************/
 void HoverboardAPI::sendPWM(int16_t pwm, int16_t steer, char som) {
-
   // Compose new Message
   PROTOCOL_MSG2 msg = {
     .SOM = som,
@@ -231,11 +252,7 @@ void HoverboardAPI::sendPWM(int16_t pwm, int16_t steer, char som) {
   protocol_post(&s, &msg);
 }
 
-/***************************************************************************
- * Sends PWM values and Limits to hoverboard
- ***************************************************************************/
-void HoverboardAPI::sendPWMData(int16_t pwm, int16_t steer, int speed_max_power, int speed_min_power, int speed_minimum_pwm, char som) {
-
+void HoverboardAPI::sendDifferentialPWM(int16_t left_cmd, int16_t right_cmd, char som) {
   // Compose new Message
   PROTOCOL_MSG2 msg = {
     .SOM = som,
@@ -245,9 +262,35 @@ void HoverboardAPI::sendPWMData(int16_t pwm, int16_t steer, int speed_max_power,
   PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
   PROTOCOL_PWM_DATA *writespeed = (PROTOCOL_PWM_DATA *) writevals->content;
 
+  writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
+  writevals->code = Codes::setPointPWM;
+
+  writespeed->pwm[0] = left_cmd;
+  writespeed->pwm[1] = right_cmd;
+
+  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(writespeed->pwm);
+  protocol_post(&s, &msg);
+}
+
+/***************************************************************************
+ * Sends PWM values and Limits to hoverboard
+ ***************************************************************************/
+void HoverboardAPI::sendPWMData(int16_t pwm,
+				int16_t steer,
+				int speed_max_power,
+				int speed_min_power,
+				int speed_minimum_pwm,
+				char som) {
+  // Compose new Message
+  PROTOCOL_MSG2 msg = {
+    .SOM = som,
+  };
+
+  // Prepare Message structure to write PWM values.
+  PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
+  PROTOCOL_PWM_DATA *writespeed = (PROTOCOL_PWM_DATA *) writevals->content;
 
   writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
-
   writevals->code = Codes::setPointPWMData;
 
   writespeed->pwm[0] = pwm + steer;
@@ -256,8 +299,65 @@ void HoverboardAPI::sendPWMData(int16_t pwm, int16_t steer, int speed_max_power,
   writespeed->speed_min_power = speed_min_power;
   writespeed->speed_minimum_pwm = speed_minimum_pwm;
 
-
   msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(*writespeed);
+  protocol_post(&s, &msg);
+}
+
+/***************************************************************************
+ * Sends speed control to hoverboard
+ ***************************************************************************/
+void HoverboardAPI::sendSpeedData(double left_speed, double right_speed, int16_t max_power, int16_t min_speed, char som) {
+  // Compose new Message
+  PROTOCOL_MSG2 msg = {
+    .SOM = som,
+  };
+
+  // Prepare Message structure to write PWM values.
+  PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
+  PROTOCOL_SPEED_DATA *writespeed = (PROTOCOL_SPEED_DATA *) writevals->content;
+
+  writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
+  writevals->code = Codes::setSpeed;
+
+  writespeed->wanted_speed_mm_per_sec[0] = left_speed * 1000;
+  writespeed->wanted_speed_mm_per_sec[1] = right_speed * 1000;
+  writespeed->speed_max_power = max_power;
+  writespeed->speed_min_power = -max_power;
+  writespeed->speed_minimum_speed = min_speed;
+
+  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + 8 + 8 + 4;
+  protocol_post(&s, &msg);
+}
+
+void HoverboardAPI::sendPIDControl(int16_t Kp, int16_t Ki, int16_t Kd, int16_t speed_increment, char som) {
+  // Compose new Message
+  PROTOCOL_MSG2 msg = {
+    .SOM = som,
+  };
+
+  // Prepare Message structure to write PWM values.
+  PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
+  writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
+  uint16_t *value = (uint16_t*)writevals->content;
+
+  // Kp, Ki, Kd, Speed Incr
+  // Original values [20 10 0 20]. Works better on my motors (A.M.): [50 20 10 30] 
+  writevals->code = Codes::setSpeedKp;
+  
+  *value = Kp;
+  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + 2;
+  protocol_post(&s, &msg);
+
+  writevals->code = Codes::setSpeedKi;
+  *value = Ki;
+  protocol_post(&s, &msg);
+
+  writevals->code = Codes::setSpeedKd;
+  *value = Kd;
+  protocol_post(&s, &msg);
+
+  writevals->code = Codes::setSpeedIncrLimit;
+  *value = speed_increment;
   protocol_post(&s, &msg);
 }
 
@@ -409,3 +509,12 @@ double HoverboardAPI::getSpeed0_kmh() {
 double HoverboardAPI::getSpeed1_kmh() {
   return   HallData[1].HallSpeed_mm_per_s * 3600.0 / 1000000.0;
 }
+
+double HoverboardAPI::getPosition0_mm() {
+  return   HallData[0].HallPosn_mm;
+}
+
+double HoverboardAPI::getPosition1_mm() {
+  return   HallData[1].HallPosn_mm;
+}
+
