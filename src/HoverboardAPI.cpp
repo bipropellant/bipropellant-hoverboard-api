@@ -31,13 +31,13 @@ extern "C" {
 #include <unistd.h>
 #include <time.h>
 
-void delay(uint32_t ms) { 
-  usleep (ms*1000); 
+void delay(uint32_t ms) {
+  usleep (ms*1000);
 }
 
 static uint64_t ts_start = 0;
 
-unsigned long millis() { 
+unsigned long millis() {
   struct timespec ts;
 
   if (ts_start == 0) {
@@ -56,7 +56,7 @@ uint32_t tickWrapper(void) { return (uint32_t) millis(); }
 
 HoverboardAPI::HoverboardAPI(int (*send_serial_data)( unsigned char *data, int len )) {
   if(protocol_init(&s) != 0) while(1) {};
-  setup_protocol();
+  setup_protocol(&s);
   s.send_serial_data = send_serial_data;
   s.send_serial_data_wait = send_serial_data;
   s.allow_ascii = 0;       // do not allow ASCII parsing.
@@ -64,7 +64,7 @@ HoverboardAPI::HoverboardAPI(int (*send_serial_data)( unsigned char *data, int l
 //  s.timeout2 = 10; // timeout between characters
   protocol_GetTick = tickWrapper;
   protocol_Delay = delay;
-  setParamHandler(Codes::sensHall, NULL); // Disable callbacks for Hall
+  setParamHandler(&s, Codes::sensHall, NULL); // Disable callbacks for Hall
 }
 
 
@@ -94,8 +94,8 @@ int HoverboardAPI::getTxBufferLevel() {
  ***************************************************************************/
 
 PARAMSTAT_FN HoverboardAPI::updateParamHandler(Codes code, PARAMSTAT_FN callback) {
-  PARAMSTAT_FN old = getParamHandler(code);
-  setParamHandler(code, callback);
+  PARAMSTAT_FN old = getParamHandler(&s, code);
+  setParamHandler(&s, code, callback);
   return old;
 }
 
@@ -105,8 +105,8 @@ PARAMSTAT_FN HoverboardAPI::updateParamHandler(Codes code, PARAMSTAT_FN callback
  ***************************************************************************/
 
 int HoverboardAPI::updateParamVariable(Codes code, void *ptr, int len) {
-  if(params[code] != NULL) {
-    return setParamVariable(code, params[code]->ui_type, ptr, len, params[code]->rw );
+  if(s.params[code] != NULL) {
+    return setParamVariable(&s, code, s.params[code]->ui_type, ptr, len, s.params[code]->rw );
   }
 
   return 1;
@@ -187,8 +187,8 @@ void HoverboardAPI::scheduleTransmission(Codes code, int count, unsigned int per
   SubscribeData.som = som;
 
   // Use native Subscription function to fill in array.
-  if(params[Codes::protocolSubscriptions] && params[Codes::protocolSubscriptions]->fn) {
-    params[Codes::protocolSubscriptions]->fn( &s, params[Codes::protocolSubscriptions], FN_TYPE_POST_WRITE, (unsigned char*) &SubscribeData, sizeof(SubscribeData) );
+  if(s.params[Codes::protocolSubscriptions] && s.params[Codes::protocolSubscriptions]->fn) {
+    s.params[Codes::protocolSubscriptions]->fn( &s, s.params[Codes::protocolSubscriptions], FN_TYPE_POST_WRITE, (unsigned char*) &SubscribeData, sizeof(SubscribeData) );
   }
 }
 
@@ -341,9 +341,9 @@ void HoverboardAPI::sendPIDControl(int16_t Kp, int16_t Ki, int16_t Kd, int16_t s
   uint16_t *value = (uint16_t*)writevals->content;
 
   // Kp, Ki, Kd, Speed Incr
-  // Original values [20 10 0 20]. Works better on my motors (A.M.): [50 20 10 30] 
+  // Original values [20 10 0 20]. Works better on my motors (A.M.): [50 20 10 30]
   writevals->code = Codes::setSpeedKp;
-  
+
   *value = Kp;
   msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + 2;
   protocol_post(&s, &msg);

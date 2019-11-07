@@ -9,7 +9,7 @@ extern "C" {
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // initialize protocol and register functions
-extern int setup_protocol();
+extern int setup_protocol(PROTOCOL_STAT *s);
 
 
 
