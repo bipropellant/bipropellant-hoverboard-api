@@ -518,3 +518,32 @@ double HoverboardAPI::getPosition1_mm() {
   return   HallData[1].HallPosn_mm;
 }
 
+/***************************************************************************
+ * Sends Raw Data to hoverboard
+ ***************************************************************************/
+void HoverboardAPI::sendRawData(
+        unsigned char cmd,
+				unsigned char code,
+        unsigned char *content,
+        int len,
+				char som) {
+
+  // Compose new Message
+  PROTOCOL_MSG2 msg = {
+    .SOM = som,
+  };
+
+  // Prepare Message structure to write values.
+  PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
+
+
+  writevals->cmd  = cmd;
+  writevals->code = code;
+
+  if(len <= sizeof(writevals->content)) memcpy(&writevals->content, content, len);
+
+
+  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + len;
+  protocol_post(&s, &msg);
+}
+
