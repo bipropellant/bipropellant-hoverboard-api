@@ -10,25 +10,25 @@ class HoverboardAPI
   public:
 
     enum Codes {
-  protocolVersion          = 0x00,
-  protocolSubscriptions    = 0x22,
-  protocolCountSum         = 0x23,
-  protocolCountACK         = 0x23,
-  protocolCountnoACK       = 0x23,
-  sensHall                 = 0x02,
-  setSpeed                 = 0x03,
-  sensElectrical           = 0x08,
-  enableMotors             = 0x09,
-  disablePoweroff          = 0x0A,
-  debugOut                 = 0x0B,
-  setPointPWMData          = 0x0D,
-  setPointPWM              = 0x0E,
-  setBuzzer                = 0x21,
-  setSpeedKp               = 0x85,
-  setSpeedKi               = 0x86,
-  setSpeedKd               = 0x87,
-  setSpeedIncrLimit        = 0x88
-};
+      protocolVersion          = 0x00,
+      protocolSubscriptions    = 0x22,
+      protocolCountSum         = 0x23,
+      protocolCountACK         = 0x23,
+      protocolCountnoACK       = 0x23,
+      sensHall                 = 0x02,
+      setSpeed                 = 0x03,
+      sensElectrical           = 0x08,
+      enableMotors             = 0x09,
+      disablePoweroff          = 0x0A,
+      debugOut                 = 0x0B,
+      setPointPWMData          = 0x0D,
+      setPointPWM              = 0x0E,
+      setBuzzer                = 0x21,
+      setSpeedKp               = 0x85,
+      setSpeedKi               = 0x86,
+      setSpeedKd               = 0x87,
+      setSpeedIncrLimit        = 0x88
+    };
 
   //commonly used functions **************************************************************************
     HoverboardAPI(int (*send_serial_data)( unsigned char *data, int len ));          // * constructor.
@@ -75,10 +75,6 @@ class HoverboardAPI
     void resetCounters();
     void printStats();
 
-
-    //available but not commonly used functions ********************************************************
-
-  private:
     PROTOCOL_STAT s;
 
 
