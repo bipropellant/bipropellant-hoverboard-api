@@ -64,7 +64,6 @@ HoverboardAPI::HoverboardAPI(int (*send_serial_data)( unsigned char *data, int l
 //  s.timeout2 = 10; // timeout between characters
   protocol_GetTick = tickWrapper;
   protocol_Delay = delay;
-  setParamHandler(&s, Codes::sensHall, NULL); // Disable callbacks for Hall
 }
 
 
