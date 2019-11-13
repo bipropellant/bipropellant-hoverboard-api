@@ -106,7 +106,7 @@ PARAMSTAT_FN HoverboardAPI::updateParamHandler(Codes code, PARAMSTAT_FN callback
 
 int HoverboardAPI::updateParamVariable(Codes code, void *ptr, int len) {
   if(s.params[code] != NULL) {
-    return setParamVariable(&s, code, s.params[code]->ui_type, ptr, len, s.params[code]->rw );
+    return setParamVariable(&s, code, s.params[code]->ui_type, ptr, len);
   }
 
   return 1;
@@ -149,13 +149,13 @@ void HoverboardAPI::requestRead(Codes code, char som) {
     };
 
     // Message structure is for reading values.
-    PROTOCOL_BYTES_READVALS *readvals = (PROTOCOL_BYTES_READVALS *) &(msg.bytes);
-    readvals->cmd  = PROTOCOL_CMD_READVAL;  // Read value
+    PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
+    writevals->cmd  = PROTOCOL_CMD_READVAL;  // Read value
 
     // Code indicating which variable should be read. See params[] in protocol.c
-    readvals->code = code;
+    writevals->code = code;
 
-    msg.len = sizeof(readvals->cmd) + sizeof(readvals->code);
+    msg.len = sizeof(writevals->cmd) + sizeof(writevals->code);
 
     protocol_post(&s, &msg);
 }
@@ -179,16 +179,28 @@ float HoverboardAPI::getMotorAmpsAvg(uint8_t motor) {
  ***************************************************************************/
 
 void HoverboardAPI::scheduleTransmission(Codes code, int count, unsigned int period, char som) {
-  PROTOCOL_SUBSCRIBEDATA SubscribeData;
-  SubscribeData.code   = code;
-  SubscribeData.count  = count;
-  SubscribeData.period = period;
-  SubscribeData.next_send_time = 0;
-  SubscribeData.som = som;
+
+  PROTOCOL_MSG2 newMsg;
+  memset((void*)&newMsg,0x00,sizeof(PROTOCOL_MSG2));
+  PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(newMsg.bytes);
+  PROTOCOL_SUBSCRIBEDATA *SubscribeData = (PROTOCOL_SUBSCRIBEDATA *) &writevals->content;
+  SubscribeData->code   = code;
+  SubscribeData->count  = count;
+  SubscribeData->period = period;
+  SubscribeData->next_send_time = 0;
+  SubscribeData->som = som;
 
   // Use native Subscription function to fill in array.
+
+
+  writevals->cmd  = PROTOCOL_CMD_READVALRESPONSE; // This should prevent further processing
+  writevals->code = Codes::protocolSubscriptions;
+  newMsg.SOM = PROTOCOL_SOM_NOACK;
+  newMsg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(SubscribeData) + 1; // 1 for Checksum
+
+
   if(s.params[Codes::protocolSubscriptions] && s.params[Codes::protocolSubscriptions]->fn) {
-    s.params[Codes::protocolSubscriptions]->fn( &s, s.params[Codes::protocolSubscriptions], FN_TYPE_POST_WRITE, (unsigned char*) &SubscribeData, sizeof(SubscribeData) );
+    s.params[Codes::protocolSubscriptions]->fn( &s, s.params[Codes::protocolSubscriptions], PROTOCOL_CMD_READVALRESPONSE, &newMsg );
   }
 }
 
@@ -547,3 +559,9 @@ void HoverboardAPI::sendRawData(
   protocol_post(&s, &msg);
 }
 
+/***************************************************************************
+ * Sends Raw msg to hoverboard
+ ***************************************************************************/
+void HoverboardAPI::protocolPost(PROTOCOL_MSG2 *msg) {
+  protocol_post(&s, msg);
+}

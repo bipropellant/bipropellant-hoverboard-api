@@ -26,13 +26,13 @@ int setup_protocol( PROTOCOL_STAT *s ) {
 
     int errors = 0;
 
-    errors += setParamVariable( s, 0x08, UI_NONE, (void *)&electrical_measurements, sizeof(PROTOCOL_ELECTRICAL_PARAMS), PARAM_RW);
+    errors += setParamVariable( s, 0x08, UI_NONE, (void *)&electrical_measurements, sizeof(PROTOCOL_ELECTRICAL_PARAMS));
     setParamHandler(s, 0x08, NULL);
 
-    errors += setParamVariable( s, 0x02, UI_NONE, (void *)&HallData,                sizeof(HallData), PARAM_RW);
+    errors += setParamVariable( s, 0x02, UI_NONE, (void *)&HallData,                sizeof(HallData));
     setParamHandler(s, 0x02, NULL);
 
-    errors += setParamVariable( s, 0x03, UI_NONE, (void *)&SpeedData,                sizeof(SpeedData), PARAM_RW);
+    errors += setParamVariable( s, 0x03, UI_NONE, (void *)&SpeedData,                sizeof(SpeedData));
     setParamHandler(s, 0x03, NULL);
 
     return errors;
