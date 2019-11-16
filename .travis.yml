@@ -1,24 +1,18 @@
 language: c
 sudo: false
 cache:
-    directories:
+  directories:
     - ~/arduino_ide
     - ~/.arduino15/packages/
 git:
-    depth: false
-    quiet: true
+  depth: false
+  quiet: true
 env:
-    global:
-        - ARDUINO_IDE_VERSION="1.8.7"
+  global:
         - PRETTYNAME="Bipropellant Hoverboard API"
-    
 before_install:
-    - source <(cat scripts/installArduino.sh)
-#    - source <(curl -SLs https://raw.githubusercontent.com/adafruit/travis-ci-arduino/master/install.sh)    
+  - source <(curl -SLs https://raw.githubusercontent.com/adafruit/travis-ci-arduino/master/install.sh)
 
-#install:
-#    - arduino --install-library "Adafruit ILI9341","Adafruit GFX Library"
-    
 script:
     - build_io_platforms
 
