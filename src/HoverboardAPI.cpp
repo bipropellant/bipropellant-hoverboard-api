@@ -195,7 +195,7 @@ void HoverboardAPI::scheduleTransmission(Codes code, int count, unsigned int per
   writevals->cmd  = PROTOCOL_CMD_READVALRESPONSE; // This should prevent further processing
   writevals->code = Codes::protocolSubscriptions;
   newMsg.SOM = PROTOCOL_SOM_NOACK;
-  newMsg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(PROTOCOL_SUBSCRIBEDATA) + 1; // 1 for Checksum
+  newMsg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(PROTOCOL_SUBSCRIBEDATA);
 
 
   if(s.params[Codes::protocolSubscriptions] && s.params[Codes::protocolSubscriptions]->fn) {
