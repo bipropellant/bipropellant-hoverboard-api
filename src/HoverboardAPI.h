@@ -13,8 +13,9 @@ class HoverboardAPI
       protocolVersion          = 0x00,
       protocolSubscriptions    = 0x22,
       protocolCountSum         = 0x23,
-      protocolCountACK         = 0x23,
-      protocolCountnoACK       = 0x23,
+      protocolCountACK         = 0x24,
+      protocolCountnoACK       = 0x25,
+      text                     = 0x26,
       sensHall                 = 0x02,
       setSpeed                 = 0x03,
       sensElectrical           = 0x08,
@@ -45,6 +46,9 @@ class HoverboardAPI
 
 
     void sendPWM(int16_t pwm, int16_t steer = 0, char som = PROTOCOL_SOM_NOACK);
+    int sendText(char *message, unsigned char som = PROTOCOL_SOM_ACK);
+    void receiveText(char *message);
+
     void sendDifferentialPWM(int16_t left_cmd, int16_t right_cmd, char som = PROTOCOL_SOM_NOACK);
     void sendPWMData(int16_t pwm, int16_t steer = 0, int speed_max_power = 600, int speed_min_power = -600, int speed_minimum_pwm = 10, char som = PROTOCOL_SOM_ACK);
     void sendSpeedData(double left_speed, double right_speed, int16_t max_power, int16_t min_speed, char som = PROTOCOL_SOM_NOACK);

@@ -564,3 +564,32 @@ void HoverboardAPI::sendRawData(
 void HoverboardAPI::protocolPost(PROTOCOL_MSG2 *msg) {
   protocol_post(&s, msg);
 }
+
+/***************************************************************************
+ * Sends Text msg to hoverboard
+ ***************************************************************************/
+int HoverboardAPI::sendText(char *message, unsigned char som) {
+  return protocol_send_text(&s, message, som);
+}
+
+/***************************************************************************
+ * Fakes Receiving a Message from hoverboard (Useful for debugging)
+ ***************************************************************************/
+void HoverboardAPI::receiveText(char *message) {
+
+  if( (s.params[0x26]) && (strlen(message) <= s.params[0x26]->len ) ) {
+
+      PROTOCOL_MSG2 newMsg;
+      memset((void*)&newMsg,0x00,sizeof(PROTOCOL_MSG2));
+      PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(newMsg.bytes);
+
+      newMsg.SOM = PROTOCOL_SOM_NOACK;
+      newMsg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + strlen(message) + 1; // +1 for Null character \0
+
+      writevals->cmd  = PROTOCOL_CMD_READVALRESPONSE;
+      writevals->code = 0x26;                    // 0x26 for text
+      strcpy( (char *) writevals->content, message);
+
+      protocol_process_message(&s, &newMsg);
+  }
+}
