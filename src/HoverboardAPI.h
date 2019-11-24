@@ -16,6 +16,7 @@ class HoverboardAPI
       protocolCountACK         = 0x24,
       protocolCountnoACK       = 0x25,
       text                     = 0x26,
+      ping                     = 0x27,
       sensHall                 = 0x02,
       setSpeed                 = 0x03,
       sensElectrical           = 0x08,
@@ -46,6 +47,7 @@ class HoverboardAPI
 
 
     void sendPWM(int16_t pwm, int16_t steer = 0, char som = PROTOCOL_SOM_NOACK);
+    void sendPing(char som = PROTOCOL_SOM_ACK);
     int sendText(char *message, unsigned char som = PROTOCOL_SOM_ACK);
     void receiveText(char *message);
 
@@ -80,7 +82,6 @@ class HoverboardAPI
     void printStats();
 
     PROTOCOL_STAT s;
-
 
 };
 
