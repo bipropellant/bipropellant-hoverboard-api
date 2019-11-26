@@ -7,6 +7,7 @@
 #include "hbprotocol/protocol_private.h"
 #include "protocolFunctions.h"
 #include <stdio.h>
+#include <string.h>
 
 
 
@@ -143,18 +144,15 @@ void HoverboardAPI::printStats() {
 void HoverboardAPI::requestRead(Codes code, char som) {
 
     // Compose new Message, no ACK needed.
-    PROTOCOL_MSG2 msg = {
+    PROTOCOL_MSG3full msg = {
       .SOM = som,
     };
 
     // Message structure is for reading values.
-    PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
-    writevals->cmd  = PROTOCOL_CMD_READVAL;  // Read value
+    msg.cmd  = PROTOCOL_CMD_READVAL;  // Read value
 
     // Code indicating which variable should be read. See params[] in protocol.c
-    writevals->code = code;
-
-    msg.len = sizeof(writevals->cmd) + sizeof(writevals->code);
+    msg.code = code;
 
     protocol_post(&s, &msg);
 }
@@ -179,10 +177,10 @@ float HoverboardAPI::getMotorAmpsAvg(uint8_t motor) {
 
 void HoverboardAPI::scheduleTransmission(Codes code, int count, unsigned int period, char som) {
 
-  PROTOCOL_MSG2 newMsg;
-  memset((void*)&newMsg,0x00,sizeof(PROTOCOL_MSG2));
-  PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(newMsg.bytes);
-  PROTOCOL_SUBSCRIBEDATA *SubscribeData = (PROTOCOL_SUBSCRIBEDATA *) &writevals->content;
+  PROTOCOL_MSG3full newMsg;
+  memset((void*)&newMsg,0x00,sizeof(PROTOCOL_MSG3full));
+
+  PROTOCOL_SUBSCRIBEDATA *SubscribeData = (PROTOCOL_SUBSCRIBEDATA *) &newMsg.content;
   SubscribeData->code   = code;
   SubscribeData->count  = count;
   SubscribeData->period = period;
@@ -192,10 +190,10 @@ void HoverboardAPI::scheduleTransmission(Codes code, int count, unsigned int per
   // Use native Subscription function to fill in array.
 
 
-  writevals->cmd  = PROTOCOL_CMD_READVALRESPONSE; // This should prevent further processing
-  writevals->code = Codes::protocolSubscriptions;
+  newMsg.cmd  = PROTOCOL_CMD_READVALRESPONSE; // This should prevent further processing
+  newMsg.code = Codes::protocolSubscriptions;
   newMsg.SOM = PROTOCOL_SOM_NOACK;
-  newMsg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(PROTOCOL_SUBSCRIBEDATA);
+  newMsg.lenPayload = sizeof(PROTOCOL_SUBSCRIBEDATA);
 
 
   if(s.params[Codes::protocolSubscriptions] && s.params[Codes::protocolSubscriptions]->fn) {
@@ -212,18 +210,17 @@ void HoverboardAPI::scheduleTransmission(Codes code, int count, unsigned int per
 void HoverboardAPI::scheduleRead(Codes code, int count, unsigned int period, char som) {
 
   // Compose new Message, with ACK.
-  PROTOCOL_MSG2 msg = {
+  PROTOCOL_MSG3full msg = {
     .SOM = PROTOCOL_SOM_ACK,
   };
 
   // Prepare Message structure to write subscription values.
-  PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
-  PROTOCOL_SUBSCRIBEDATA *writesubscribe = (PROTOCOL_SUBSCRIBEDATA *) writevals->content;
+  PROTOCOL_SUBSCRIBEDATA *writesubscribe = (PROTOCOL_SUBSCRIBEDATA *) msg.content;
 
-  writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Read value
+  msg.cmd  = PROTOCOL_CMD_WRITEVAL;  // Read value
 
   // Write into Subscriptions
-  writevals->code = Codes::protocolSubscriptions;
+  msg.code = Codes::protocolSubscriptions;
 
 
   // Code indicating which variable should be read. See params[] in protocol.c
@@ -232,7 +229,7 @@ void HoverboardAPI::scheduleRead(Codes code, int count, unsigned int period, cha
   writesubscribe->period = period;
   writesubscribe->som = som;
 
-  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(*writesubscribe);
+  msg.lenPayload = sizeof(*writesubscribe);
 
   protocol_post(&s, &msg);
 }
@@ -243,43 +240,41 @@ void HoverboardAPI::scheduleRead(Codes code, int count, unsigned int period, cha
  ***************************************************************************/
 void HoverboardAPI::sendPWM(int16_t pwm, int16_t steer, char som) {
   // Compose new Message
-  PROTOCOL_MSG2 msg = {
+  PROTOCOL_MSG3full msg = {
     .SOM = som,
   };
 
   // Prepare Message structure to write PWM values.
-  PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
-  PROTOCOL_PWM_DATA *writespeed = (PROTOCOL_PWM_DATA *) writevals->content;
+  PROTOCOL_PWM_DATA *writespeed = (PROTOCOL_PWM_DATA *) msg.content;
 
 
-  writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
+  msg.cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
 
-  writevals->code = Codes::setPointPWM;
+  msg.code = Codes::setPointPWM;
 
   writespeed->pwm[0] = pwm + steer;
   writespeed->pwm[1] = pwm - steer;
 
-  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(writespeed->pwm);
+  msg.lenPayload = sizeof(writespeed->pwm);
   protocol_post(&s, &msg);
 }
 
 void HoverboardAPI::sendDifferentialPWM(int16_t left_cmd, int16_t right_cmd, char som) {
   // Compose new Message
-  PROTOCOL_MSG2 msg = {
+  PROTOCOL_MSG3full msg = {
     .SOM = som,
   };
 
   // Prepare Message structure to write PWM values.
-  PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
-  PROTOCOL_PWM_DATA *writespeed = (PROTOCOL_PWM_DATA *) writevals->content;
+  PROTOCOL_PWM_DATA *writespeed = (PROTOCOL_PWM_DATA *) msg.content;
 
-  writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
-  writevals->code = Codes::setPointPWM;
+  msg.cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
+  msg.code = Codes::setPointPWM;
 
   writespeed->pwm[0] = left_cmd;
   writespeed->pwm[1] = right_cmd;
 
-  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(writespeed->pwm);
+  msg.lenPayload = sizeof(writespeed->pwm);
   protocol_post(&s, &msg);
 }
 
@@ -293,16 +288,15 @@ void HoverboardAPI::sendPWMData(int16_t pwm,
 				int speed_minimum_pwm,
 				char som) {
   // Compose new Message
-  PROTOCOL_MSG2 msg = {
+  PROTOCOL_MSG3full msg = {
     .SOM = som,
   };
 
   // Prepare Message structure to write PWM values.
-  PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
-  PROTOCOL_PWM_DATA *writespeed = (PROTOCOL_PWM_DATA *) writevals->content;
+  PROTOCOL_PWM_DATA *writespeed = (PROTOCOL_PWM_DATA *) msg.content;
 
-  writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
-  writevals->code = Codes::setPointPWMData;
+  msg.cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
+  msg.code = Codes::setPointPWMData;
 
   writespeed->pwm[0] = pwm + steer;
   writespeed->pwm[1] = pwm - steer;
@@ -310,7 +304,7 @@ void HoverboardAPI::sendPWMData(int16_t pwm,
   writespeed->speed_min_power = speed_min_power;
   writespeed->speed_minimum_pwm = speed_minimum_pwm;
 
-  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(*writespeed);
+  msg.lenPayload = sizeof(*writespeed);
   protocol_post(&s, &msg);
 }
 
@@ -319,16 +313,15 @@ void HoverboardAPI::sendPWMData(int16_t pwm,
  ***************************************************************************/
 void HoverboardAPI::sendSpeedData(double left_speed, double right_speed, int16_t max_power, int16_t min_speed, char som) {
   // Compose new Message
-  PROTOCOL_MSG2 msg = {
+  PROTOCOL_MSG3full msg = {
     .SOM = som,
   };
 
   // Prepare Message structure to write PWM values.
-  PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
-  PROTOCOL_SPEED_DATA *writespeed = (PROTOCOL_SPEED_DATA *) writevals->content;
+  PROTOCOL_SPEED_DATA *writespeed = (PROTOCOL_SPEED_DATA *) msg.content;
 
-  writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
-  writevals->code = Codes::setSpeed;
+  msg.cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
+  msg.code = Codes::setSpeed;
 
   writespeed->wanted_speed_mm_per_sec[0] = left_speed * 1000;
   writespeed->wanted_speed_mm_per_sec[1] = right_speed * 1000;
@@ -336,38 +329,37 @@ void HoverboardAPI::sendSpeedData(double left_speed, double right_speed, int16_t
   writespeed->speed_min_power = -max_power;
   writespeed->speed_minimum_speed = min_speed;
 
-  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + 8 + 8 + 4;
+  msg.lenPayload = 8 + 8 + 4;
   protocol_post(&s, &msg);
 }
 
 void HoverboardAPI::sendPIDControl(int16_t Kp, int16_t Ki, int16_t Kd, int16_t speed_increment, char som) {
   // Compose new Message
-  PROTOCOL_MSG2 msg = {
+  PROTOCOL_MSG3full msg = {
     .SOM = som,
   };
 
   // Prepare Message structure to write PWM values.
-  PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
-  writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
-  uint16_t *value = (uint16_t*)writevals->content;
+  msg.cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
+  uint16_t *value = (uint16_t*)msg.content;
 
   // Kp, Ki, Kd, Speed Incr
   // Original values [20 10 0 20]. Works better on my motors (A.M.): [50 20 10 30]
-  writevals->code = Codes::setSpeedKp;
+  msg.code = Codes::setSpeedKp;
 
   *value = Kp;
-  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + 2;
+  msg.lenPayload = 2;
   protocol_post(&s, &msg);
 
-  writevals->code = Codes::setSpeedKi;
+  msg.code = Codes::setSpeedKi;
   *value = Ki;
   protocol_post(&s, &msg);
 
-  writevals->code = Codes::setSpeedKd;
+  msg.code = Codes::setSpeedKd;
   *value = Kd;
   protocol_post(&s, &msg);
 
-  writevals->code = Codes::setSpeedIncrLimit;
+  msg.code = Codes::setSpeedIncrLimit;
   *value = speed_increment;
   protocol_post(&s, &msg);
 }
@@ -378,25 +370,24 @@ void HoverboardAPI::sendPIDControl(int16_t Kp, int16_t Ki, int16_t Kd, int16_t s
 void HoverboardAPI::sendBuzzer(uint8_t buzzerFreq, uint8_t buzzerPattern, uint16_t buzzerLen, char som) {
 
   // Compose new Message
-  PROTOCOL_MSG2 msg = {
+  PROTOCOL_MSG3full msg = {
     .SOM = som,
   };
 
   // Prepare Message structure to write buzzer values.
-  PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
-  PROTOCOL_BUZZER_DATA *writebuzzer = (PROTOCOL_BUZZER_DATA *) writevals->content;
+  PROTOCOL_BUZZER_DATA *writebuzzer = (PROTOCOL_BUZZER_DATA *) msg.content;
 
 
-  writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
+  msg.cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
 
-  writevals->code = Codes::setBuzzer;
+  msg.code = Codes::setBuzzer;
 
   writebuzzer->buzzerFreq = buzzerFreq;
   writebuzzer->buzzerPattern = buzzerPattern;
   writebuzzer->buzzerLen = buzzerLen;
 
 
-  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(*writebuzzer);
+  msg.lenPayload = sizeof(*writebuzzer);
   protocol_post(&s, &msg);
 }
 
@@ -406,23 +397,22 @@ void HoverboardAPI::sendBuzzer(uint8_t buzzerFreq, uint8_t buzzerPattern, uint16
 void HoverboardAPI::sendEnable(uint8_t newEnable, char som) {
 
   // Compose new Message
-  PROTOCOL_MSG2 msg = {
+  PROTOCOL_MSG3full msg = {
     .SOM = som,
   };
 
   // Prepare Message structure to write buzzer values.
-  PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
-  uint8_t *writeenable = (uint8_t *) writevals->content;
+  uint8_t *writeenable = (uint8_t *) msg.content;
 
 
-  writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
+  msg.cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
 
-  writevals->code = Codes::enableMotors;
+  msg.code = Codes::enableMotors;
 
   *writeenable = newEnable;
 
 
-  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(*writeenable);
+  msg.lenPayload = sizeof(*writeenable);
   protocol_post(&s, &msg);
 }
 
@@ -432,18 +422,17 @@ void HoverboardAPI::sendEnable(uint8_t newEnable, char som) {
 void HoverboardAPI::sendCounterReset(char som) {
 
   // Compose new Message
-  PROTOCOL_MSG2 msg = {
+  PROTOCOL_MSG3full msg = {
     .SOM = som,
   };
 
   // Prepare Message structure to write buzzer values.
-  PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
-  PROTOCOLCOUNT *writeprotocolcount = (PROTOCOLCOUNT *) writevals->content;
+  PROTOCOLCOUNT *writeprotocolcount = (PROTOCOLCOUNT *) msg.content;
 
 
-  writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
+  msg.cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
 
-  writevals->code = Codes::protocolCountSum;
+  msg.code = Codes::protocolCountSum;
 
   writeprotocolcount->rx = 0;
   writeprotocolcount->rxMissing = 0;
@@ -455,7 +444,7 @@ void HoverboardAPI::sendCounterReset(char som) {
   writeprotocolcount->unknowncommands = 0;
   writeprotocolcount->unplausibleresponse = 0;
 
-  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(*writeprotocolcount);
+  msg.lenPayload = sizeof(*writeprotocolcount);
   protocol_post(&s, &msg);
 }
 
@@ -540,28 +529,24 @@ void HoverboardAPI::sendRawData(
 				char som) {
 
   // Compose new Message
-  PROTOCOL_MSG2 msg = {
+  PROTOCOL_MSG3full msg = {
     .SOM = som,
   };
 
-  // Prepare Message structure to write values.
-  PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
+  msg.cmd  = cmd;
+  msg.code = code;
+
+  if(len <= sizeof( ((PROTOCOL_MSG3full *)0)->content ) ) memcpy(&msg.content, content, len);
 
 
-  writevals->cmd  = cmd;
-  writevals->code = code;
-
-  if(len <= sizeof(writevals->content)) memcpy(&writevals->content, content, len);
-
-
-  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + len;
+  msg.lenPayload = len;
   protocol_post(&s, &msg);
 }
 
 /***************************************************************************
  * Sends Raw msg to hoverboard
  ***************************************************************************/
-void HoverboardAPI::protocolPost(PROTOCOL_MSG2 *msg) {
+void HoverboardAPI::protocolPost(PROTOCOL_MSG3full *msg) {
   protocol_post(&s, msg);
 }
 
@@ -579,16 +564,15 @@ void HoverboardAPI::receiveText(char *message) {
 
   if( (s.params[0x26]) && (strlen(message) <= s.params[0x26]->len ) ) {
 
-      PROTOCOL_MSG2 newMsg;
-      memset((void*)&newMsg,0x00,sizeof(PROTOCOL_MSG2));
-      PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(newMsg.bytes);
+      PROTOCOL_MSG3full newMsg;
+      memset((void*)&newMsg,0x00,sizeof(PROTOCOL_MSG3full));
 
       newMsg.SOM = PROTOCOL_SOM_NOACK;
-      newMsg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + strlen(message) + 1; // +1 for Null character \0
+      newMsg.lenPayload = strlen(message) + 1; // +1 for Null character \0
 
-      writevals->cmd  = PROTOCOL_CMD_READVALRESPONSE;
-      writevals->code = 0x26;                    // 0x26 for text
-      strcpy( (char *) writevals->content, message);
+      newMsg.cmd  = PROTOCOL_CMD_READVALRESPONSE;
+      newMsg.code = 0x26;                    // 0x26 for text
+      strcpy( (char *) newMsg.content, message);
 
       protocol_process_message(&s, &newMsg);
   }

@@ -10,7 +10,7 @@ class HoverboardAPI
   public:
 
     enum Codes {
-      protocolVersion          = 0x00,
+      protocolVersion          = 0xFE,
       protocolSubscriptions    = 0x22,
       protocolCountSum         = 0x23,
       protocolCountACK         = 0x24,
@@ -54,7 +54,7 @@ class HoverboardAPI
     void sendSpeedData(double left_speed, double right_speed, int16_t max_power, int16_t min_speed, char som = PROTOCOL_SOM_NOACK);
     void sendPIDControl(int16_t Kp, int16_t Ki, int16_t Kd, int16_t speed_increment, char som = PROTOCOL_SOM_NOACK);
     void sendRawData(unsigned char cmd, unsigned char code, unsigned char *content, int len, char som);
-    void protocolPost(PROTOCOL_MSG2 *msg);
+    void protocolPost(PROTOCOL_MSG3full *msg);
 
 
     void sendEnable(uint8_t newEnable, char som = PROTOCOL_SOM_ACK);
