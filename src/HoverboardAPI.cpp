@@ -586,22 +586,21 @@ void HoverboardAPI::sendPing(char som) {
   unsigned long time = millis();
 
   // Compose new Message
-  PROTOCOL_MSG2 msg = {
+  PROTOCOL_MSG3full msg = {
     .SOM = som,
   };
 
   // Prepare Message structure to write buzzer values.
-  PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
-  unsigned long *writetime = (unsigned long *) writevals->content;
+  unsigned long *writetime = (unsigned long *) msg.content;
 
 
-  writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
+  msg.cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
 
-  writevals->code = Codes::ping;
+  msg.code = Codes::ping;
 
   *writetime = time;
 
-  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(*writetime);
+  msg.lenPayload = sizeof(*writetime);
   protocol_post(&s, &msg);
 
 

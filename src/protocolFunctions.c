@@ -27,7 +27,7 @@ volatile PROTOCOL_SPEED_DATA SpeedData;
 // Sends back the received Message as a readresponse. (Sender can send a timestamp to measure latency)
 unsigned long latency = 0;
 
-void fn_customPing ( PROTOCOL_STAT *s, PARAMSTAT *param, unsigned char cmd, PROTOCOL_MSG2 *msg ) {
+void fn_customPing ( PROTOCOL_STAT *s, PARAMSTAT *param, unsigned char cmd, PROTOCOL_MSG3full *msg ) {
 
     // Keep functionality to reply to pings.
     fn_ping( s, param, cmd, msg);
@@ -37,10 +37,8 @@ void fn_customPing ( PROTOCOL_STAT *s, PARAMSTAT *param, unsigned char cmd, PROT
         case PROTOCOL_CMD_READVALRESPONSE:
         {
             if(msg) {
-                PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) msg->bytes;
-
                 unsigned long timeSent;
-                memcpy( &timeSent, writevals->content, sizeof(timeSent));
+                memcpy( &timeSent, msg->content, sizeof(timeSent));
 
                 latency = millis() - timeSent;
             }
