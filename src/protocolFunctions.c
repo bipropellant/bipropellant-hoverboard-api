@@ -1,6 +1,8 @@
 #include "hbprotocol/protocol.h"
 #include <stdio.h>
+#include <string.h>
 
+extern unsigned long millis(void);
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Variable & Functions for 0x02 hall data
@@ -21,6 +23,32 @@ volatile PROTOCOL_SPEED_DATA SpeedData;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
+// Variable & Functions for 0x27 Ping
+// Sends back the received Message as a readresponse. (Sender can send a timestamp to measure latency)
+unsigned long latency = 0;
+
+void fn_customPing ( PROTOCOL_STAT *s, PARAMSTAT *param, unsigned char cmd, PROTOCOL_MSG2 *msg ) {
+
+    // Keep functionality to reply to pings.
+    fn_ping( s, param, cmd, msg);
+
+    switch (cmd) {
+
+        case PROTOCOL_CMD_READVALRESPONSE:
+        {
+            if(msg) {
+                PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) msg->bytes;
+
+                unsigned long timeSent;
+                memcpy( &timeSent, writevals->content, sizeof(timeSent));
+
+                latency = millis() - timeSent;
+            }
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////
 // initialize protocol and register functions
 int setup_protocol( PROTOCOL_STAT *s ) {
 
@@ -34,6 +62,8 @@ int setup_protocol( PROTOCOL_STAT *s ) {
 
     errors += setParamVariable( s, 0x03, UI_NONE, (void *)&SpeedData,                sizeof(SpeedData));
     setParamHandler(s, 0x03, fn_defaultProcessing);
+
+    setParamHandler(s, 0x27, fn_customPing);
 
     return errors;
 

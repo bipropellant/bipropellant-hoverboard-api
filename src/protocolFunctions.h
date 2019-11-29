@@ -10,6 +10,7 @@ extern "C" {
 ////////////////////////////////////////////////////////////////////////////////////////////
 // initialize protocol and register functions
 extern int setup_protocol(PROTOCOL_STAT *s);
+extern unsigned long latency;
 
 
 

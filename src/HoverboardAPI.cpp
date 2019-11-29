@@ -577,3 +577,33 @@ void HoverboardAPI::receiveText(char *message) {
       protocol_process_message(&s, &newMsg);
   }
 }
+
+/***************************************************************************
+ * Sends a ping to the hoverboard containing a timestamp
+ ***************************************************************************/
+void HoverboardAPI::sendPing(char som) {
+
+  unsigned long time = millis();
+
+  // Compose new Message
+  PROTOCOL_MSG2 msg = {
+    .SOM = som,
+  };
+
+  // Prepare Message structure to write buzzer values.
+  PROTOCOL_BYTES_WRITEVALS *writevals = (PROTOCOL_BYTES_WRITEVALS *) &(msg.bytes);
+  unsigned long *writetime = (unsigned long *) writevals->content;
+
+
+  writevals->cmd  = PROTOCOL_CMD_WRITEVAL;  // Write value
+
+  writevals->code = Codes::ping;
+
+  *writetime = time;
+
+  msg.len = sizeof(writevals->cmd) + sizeof(writevals->code) + sizeof(*writetime);
+  protocol_post(&s, &msg);
+
+
+
+}
