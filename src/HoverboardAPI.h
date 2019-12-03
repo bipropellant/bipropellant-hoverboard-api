@@ -55,7 +55,7 @@ class HoverboardAPI
     void sendPWMData(int16_t pwm, int16_t steer = 0, int speed_max_power = 600, int speed_min_power = -600, int speed_minimum_pwm = 10, char som = PROTOCOL_SOM_ACK);
     void sendSpeedData(double left_speed, double right_speed, int16_t max_power, int16_t min_speed, char som = PROTOCOL_SOM_NOACK);
     void sendPIDControl(int16_t Kp, int16_t Ki, int16_t Kd, int16_t speed_increment, char som = PROTOCOL_SOM_NOACK);
-    void sendRawData(unsigned char cmd, unsigned char code, unsigned char *content, int len, char som);
+    void sendRawData(unsigned char cmd, unsigned char code, unsigned char *content, unsigned char len, unsigned char som);
     void protocolPost(PROTOCOL_MSG3full *msg);
 
 
