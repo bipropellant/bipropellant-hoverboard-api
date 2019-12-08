@@ -318,6 +318,14 @@ void HoverboardAPI::sendPIDControl(int16_t Kp, int16_t Ki, int16_t Kd, int16_t s
 
   sendRawData(
     PROTOCOL_CMD_WRITEVAL,
+    Codes::setSpeedKi,
+    (unsigned char *) &Ki,
+    sizeof(Ki),
+    som
+  );
+
+  sendRawData(
+    PROTOCOL_CMD_WRITEVAL,
     Codes::setSpeedKd,
     (unsigned char *) &Kd,
     sizeof(Kd),
