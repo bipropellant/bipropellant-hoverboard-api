@@ -64,13 +64,21 @@ uint32_t tickWrapper(void)
 
 HoverboardAPI::HoverboardAPI(int (*send_serial_data)( unsigned char *data, int len ))
 {
-  if(protocol_init(&s) != 0) while(1) {};
-  setup_protocol(&s);
+  HoverboardAPI();
+  setSendSerialData(send_serial_data);
+}
+
+void HoverboardAPI::setSendSerialData(int (*send_serial_data)( unsigned char *data, int len ))
+{
   s.send_serial_data = send_serial_data;
   s.send_serial_data_wait = send_serial_data;
+}
+
+HoverboardAPI::HoverboardAPI()
+{
+  if(protocol_init(&s) != 0) while(1) {};
+  setup_protocol(&s);
   s.allow_ascii = 0;       // do not allow ASCII parsing.
-//  s.timeout1 = 50; //timeout for ACK
-//  s.timeout2 = 10; // timeout between characters
   protocol_GetTick = tickWrapper;
   protocol_Delay = delay;
 }

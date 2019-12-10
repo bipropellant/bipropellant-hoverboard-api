@@ -33,7 +33,10 @@ class HoverboardAPI
     };
 
   //commonly used functions **************************************************************************
+    HoverboardAPI();                                                                 // * constructor.
     HoverboardAPI(int (*send_serial_data)( unsigned char *data, int len ));          // * constructor.
+    void setSendSerialData(int (*send_serial_data)( unsigned char *data, int len ));
+
 
     void protocolPush(unsigned char byte);
     void protocolTick();
