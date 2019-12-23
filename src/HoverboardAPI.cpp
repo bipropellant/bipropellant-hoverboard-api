@@ -206,10 +206,7 @@ void HoverboardAPI::scheduleTransmission(Codes code, int count, unsigned int per
   newMsg.SOM = PROTOCOL_SOM_NOACK;
   newMsg.lenPayload = sizeof(PROTOCOL_SUBSCRIBEDATA);
 
-  if(s.params[Codes::protocolSubscriptions] && s.params[Codes::protocolSubscriptions]->fn)
-  {
-    s.params[Codes::protocolSubscriptions]->fn( &s, s.params[Codes::protocolSubscriptions], PROTOCOL_CMD_READVALRESPONSE, &newMsg );
-  }
+  fn_SubscribeData( &s, s.params[Codes::protocolSubscriptions], PROTOCOL_CMD_READVALRESPONSE, &newMsg );
 }
 
 /***************************************************************************
