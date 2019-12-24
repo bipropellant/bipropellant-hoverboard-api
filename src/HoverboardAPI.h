@@ -29,7 +29,9 @@ class HoverboardAPI
       setSpeedKp               = 0x85,
       setSpeedKi               = 0x86,
       setSpeedKd               = 0x87,
-      setSpeedIncrLimit        = 0x88
+      setSpeedIncrLimit        = 0x88,
+      adcSettings              = 0x90,
+      flashMagic               = 0x80
     };
 
   //commonly used functions **************************************************************************
