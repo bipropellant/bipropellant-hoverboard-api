@@ -47,6 +47,12 @@ void fn_customPing ( PROTOCOL_STAT *s, PARAMSTAT *param, unsigned char cmd, PROT
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
+// Variable & Functions for 0x__ Paddelparameters
+
+PARAMSTAT paddelParameters =
+    { 0x70, "PaddelParametes", NULL, UI_NONE, NULL, 0, fn_defaultProcessingReadOnly };
+
+////////////////////////////////////////////////////////////////////////////////////////////
 // initialize protocol and register functions
 int setup_protocol( PROTOCOL_STAT *s ) {
 
@@ -62,6 +68,8 @@ int setup_protocol( PROTOCOL_STAT *s ) {
     setParamHandler(s, 0x03, fn_defaultProcessing);
 
     setParamHandler(s, 0x27, fn_customPing);
+
+    setParam(s, &paddelParameters);
 
     return errors;
 
