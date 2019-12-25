@@ -50,7 +50,7 @@ void fn_customPing ( PROTOCOL_STAT *s, PARAMSTAT *param, unsigned char cmd, PROT
 // Variable & Functions for 0x__ Paddelparameters
 
 PARAMSTAT paddelParameters =
-    { 0x70, "PaddelParametes", NULL, UI_NONE, NULL, 0, fn_defaultProcessingReadOnly };
+    { 0x70, "PaddelParametes", NULL, UI_NONE, NULL, 0, fn_defaultProcessing };
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // initialize protocol and register functions
