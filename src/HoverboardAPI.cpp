@@ -68,7 +68,6 @@ uint32_t tickWrapper(void)
 HoverboardAPI::HoverboardAPI(int (*send_serial_data)( unsigned char *data, int len )) :
   HoverboardAPI()
 {
-  HoverboardAPI();
   setSendSerialData(send_serial_data);
 }
 
